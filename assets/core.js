@@ -1,5 +1,5 @@
 /* ============================================================
-   CLAROFI core — shared helpers, LoanFile persistence, demo data
+   LUMOLEND core — shared helpers, LoanFile persistence, demo data
    ============================================================ */
 'use strict';
 const $ = id => document.getElementById(id);
@@ -28,21 +28,21 @@ function encodeFileHash(f) {
 }
 function loadLoanFile() {
   const h = decodeHashFile();
-  if (h) { try { localStorage.setItem('clarofi_file', JSON.stringify(h)); } catch (_) {} return h; }
-  try { const s = localStorage.getItem('clarofi_file'); if (s) return JSON.parse(s); } catch (_) {}
+  if (h) { try { localStorage.setItem('lumolend_file', JSON.stringify(h)); } catch (_) {} return h; }
+  try { const s = localStorage.getItem('lumolend_file'); if (s) return JSON.parse(s); } catch (_) {}
   return null;
 }
 function saveLoanFile(f) {
   try {
-    localStorage.setItem('clarofi_file', JSON.stringify(f));
-    const pl = JSON.parse(localStorage.getItem('clarofi_pipeline') || '[]');
+    localStorage.setItem('lumolend_file', JSON.stringify(f));
+    const pl = JSON.parse(localStorage.getItem('lumolend_pipeline') || '[]');
     const i = pl.findIndex(x => x.id === f.id);
     if (i >= 0) pl[i] = f; else pl.unshift(f);
-    localStorage.setItem('clarofi_pipeline', JSON.stringify(pl.slice(0, 20)));
+    localStorage.setItem('lumolend_pipeline', JSON.stringify(pl.slice(0, 20)));
   } catch (_) {}
 }
 function loadPipeline() {
-  try { return JSON.parse(localStorage.getItem('clarofi_pipeline') || '[]'); } catch (_) { return []; }
+  try { return JSON.parse(localStorage.getItem('lumolend_pipeline') || '[]'); } catch (_) { return []; }
 }
 
 /* ---------- verification-adjusted pricing ----------
@@ -71,7 +71,7 @@ function demoFiles() {
   const now = Date.now();
   return [
     {
-      id: 'CF-DEMO01', created: new Date(now - 26 * 60000).toISOString(),
+      id: 'LL-DEMO01', created: new Date(now - 26 * 60000).toISOString(),
       first: 'Priya', last: 'Raman', email: 'priya@example.com', phone: '(415) 555-0182',
       flowKey: 'home', answers: { intent: 'home', stage: 'offers', price: 985000, downPct: 20, income: 'bank', vet: 'no', credit: '740', name: 'Priya' },
       pricing: {
@@ -91,7 +91,7 @@ function demoFiles() {
       status: 'verified'
     },
     {
-      id: 'CF-DEMO02', created: new Date(now - 3 * 3600000).toISOString(),
+      id: 'LL-DEMO02', created: new Date(now - 3 * 3600000).toISOString(),
       first: 'Marcus', last: 'Webb', email: 'marcus@example.com', phone: '(602) 555-0147',
       flowKey: 'bridge', answers: { intent: 'bridge', buy: 410000, rehab: 95000, arv: 685000, exp: '5', credit: '720', name: 'Marcus' },
       pricing: {
@@ -111,7 +111,7 @@ function demoFiles() {
       status: 'preapproved'
     },
     {
-      id: 'CF-DEMO03', created: new Date(now - 26 * 3600000).toISOString(),
+      id: 'LL-DEMO03', created: new Date(now - 26 * 3600000).toISOString(),
       first: 'Dana', last: 'Okafor', email: 'dana@example.com', phone: '(303) 555-0121',
       flowKey: 'dscr', answers: { intent: 'dscr', pr: 'purchase', value: 465000, rent: 3350, ltv: 70, credit: '760', name: 'Dana' },
       pricing: {
