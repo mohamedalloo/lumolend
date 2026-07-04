@@ -1,0 +1,689 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CLAROFI — AI finds it. A human funds it.</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --void:#05080C; --panel:#0C1218; --panel-2:#101922; --edge:#1B2833;
+  --cyan:#5FE9FF; --cyan-dim:rgba(95,233,255,.35); --cyan-ghost:rgba(95,233,255,.10);
+  --green:#00E67A; --green-glow:rgba(0,230,122,.35);
+  --amber:#FFB454;
+  --txt:#E9F4F6; --mut:#7C8F99; --faint:#3A4A54;
+  --disp:'Space Grotesk',sans-serif; --body:'Inter',sans-serif;
+}
+*{margin:0;padding:0;box-sizing:border-box}
+html,body{background:var(--void);color:var(--txt);font-family:var(--body);min-height:100vh;overflow-x:hidden}
+::selection{background:var(--cyan);color:var(--void)}
+
+/* ================= TRON GRID FLOOR ================= */
+.gridworld{position:fixed;inset:0;z-index:0;pointer-events:none;overflow:hidden}
+.horizon-glow{position:absolute;left:0;right:0;bottom:32vh;height:2px;background:linear-gradient(90deg,transparent,var(--cyan-dim),transparent);filter:blur(1px)}
+.floor{position:absolute;left:-50%;right:-50%;bottom:-6vh;height:38vh;transform:perspective(520px) rotateX(62deg);transform-origin:top center;
+  background-image:
+    linear-gradient(rgba(95,233,255,.16) 1px,transparent 1px),
+    linear-gradient(90deg,rgba(95,233,255,.16) 1px,transparent 1px);
+  background-size:56px 56px;
+  animation:floorScroll 5.5s linear infinite;
+  mask-image:linear-gradient(to bottom,transparent,black 18%,black 85%,transparent);
+  -webkit-mask-image:linear-gradient(to bottom,transparent,black 18%,black 85%,transparent);}
+@keyframes floorScroll{from{background-position:0 0}to{background-position:0 56px}}
+.sky-fade{position:absolute;inset:0;background:radial-gradient(120% 90% at 50% -10%,rgba(95,233,255,.05),transparent 55%)}
+@media(prefers-reduced-motion:reduce){.floor{animation:none}}
+
+/* ================= HEADER + CIRCUIT PROGRESS ================= */
+.top{position:relative;z-index:5}
+header{display:flex;justify-content:space-between;align-items:center;padding:20px clamp(18px,4vw,48px)}
+.mark{display:flex;align-items:center;gap:11px;cursor:pointer}
+.glyph{width:22px;height:22px;position:relative}
+.glyph i{position:absolute;left:50%;transform:translateX(-50%);background:var(--cyan);border-radius:1px;box-shadow:0 0 8px var(--cyan-dim)}
+.glyph i:nth-child(1){top:0;width:8px;height:3px}.glyph i:nth-child(2){top:7px;width:14px;height:3px}.glyph i:nth-child(3){top:14px;width:20px;height:3px}
+.wordmark{font-family:var(--disp);font-weight:700;font-size:17px;letter-spacing:.28em}
+.wordmark em{font-style:normal;color:var(--cyan)}
+.restart{background:none;border:1px solid var(--edge);color:var(--mut);font-family:var(--disp);font-size:11px;letter-spacing:.15em;padding:8px 14px;border-radius:3px;cursor:pointer;transition:.2s}
+.restart:hover{border-color:var(--cyan-dim);color:var(--cyan)}
+
+.circuit{display:flex;align-items:center;justify-content:center;gap:0;padding:2px clamp(18px,4vw,48px) 14px}
+.node{display:flex;align-items:center}
+.dot{width:9px;height:9px;border-radius:50%;border:1.5px solid var(--faint);background:var(--void);transition:.4s;position:relative}
+.dot::after{content:attr(data-l);position:absolute;top:15px;left:50%;transform:translateX(-50%);font-family:var(--disp);font-size:9.5px;letter-spacing:.18em;color:var(--faint);white-space:nowrap;transition:.4s}
+.wire{width:clamp(28px,7vw,90px);height:1.5px;background:var(--faint);transition:.4s}
+.node.done .dot{border-color:var(--cyan);background:var(--cyan);box-shadow:0 0 10px var(--cyan-dim)}
+.node.done .dot::after{color:var(--mut)}
+.node.done .wire{background:var(--cyan);box-shadow:0 0 6px var(--cyan-dim)}
+.node.on .dot{border-color:var(--cyan);box-shadow:0 0 14px var(--cyan-dim);animation:nodePulse 1.8s ease-in-out infinite}
+.node.on .dot::after{color:var(--cyan)}
+@keyframes nodePulse{0%,100%{box-shadow:0 0 6px var(--cyan-dim)}50%{box-shadow:0 0 18px var(--cyan-dim)}}
+@media(prefers-reduced-motion:reduce){.node.on .dot{animation:none}}
+@media(max-width:640px){.dot::after{display:none}}
+
+/* ================= LIVE HUD ================= */
+.hud{position:relative;z-index:5;display:flex;justify-content:center;gap:clamp(18px,5vw,64px);padding:14px clamp(18px,4vw,48px);border-top:1px solid var(--edge);border-bottom:1px solid var(--edge);background:linear-gradient(180deg,rgba(12,18,24,.85),rgba(12,18,24,.65));backdrop-filter:blur(8px)}
+.stat{text-align:center;min-width:110px}
+.stat .l{font-family:var(--disp);font-size:9.5px;letter-spacing:.24em;color:var(--mut);margin-bottom:3px}
+.stat .n{font-family:var(--disp);font-weight:500;font-size:clamp(17px,2.4vw,22px);letter-spacing:.01em;color:var(--txt);font-variant-numeric:tabular-nums}
+.stat .n.live{color:var(--green);text-shadow:0 0 16px var(--green-glow)}
+.stat .n.idle{color:var(--faint)}
+
+/* ================= STAGE ================= */
+.stage{position:relative;z-index:2;max-width:820px;margin:0 auto;padding:clamp(30px,6vh,64px) clamp(18px,4vw,40px) 42vh}
+.step{animation:warpIn .5s cubic-bezier(.22,.9,.3,1)}
+@keyframes warpIn{from{opacity:0;transform:translateY(22px) scale(.985);filter:blur(3px)}to{opacity:1;transform:none;filter:none}}
+@media(prefers-reduced-motion:reduce){.step{animation:none}}
+.eyebrow{font-family:var(--disp);font-size:10.5px;letter-spacing:.3em;color:var(--cyan);margin-bottom:16px;display:flex;align-items:center;gap:10px}
+.eyebrow::before{content:'';width:22px;height:1px;background:var(--cyan);box-shadow:0 0 8px var(--cyan-dim)}
+.q{font-family:var(--disp);font-weight:500;font-size:clamp(26px,4.4vw,42px);line-height:1.14;letter-spacing:-.01em;margin-bottom:10px}
+.sub{color:var(--mut);font-size:15px;line-height:1.6;max-width:56ch;margin-bottom:34px}
+
+/* ---- option cards ---- */
+.opts{display:grid;grid-template-columns:repeat(auto-fill,minmax(232px,1fr));gap:12px}
+.opt{position:relative;background:var(--panel);border:1px solid var(--edge);border-radius:6px;padding:18px 20px;text-align:left;cursor:pointer;color:var(--txt);font-family:var(--body);transition:border-color .2s,transform .18s,box-shadow .25s;display:flex;flex-direction:column;gap:5px;overflow:hidden}
+.opt::before{content:'';position:absolute;left:0;top:0;bottom:0;width:2px;background:var(--cyan);opacity:0;transition:.2s;box-shadow:0 0 12px var(--cyan)}
+.opt:hover{border-color:var(--cyan-dim);transform:translateY(-2px);box-shadow:0 6px 28px rgba(95,233,255,.07)}
+.opt:hover::before{opacity:1}
+.opt:focus-visible{outline:2px solid var(--cyan);outline-offset:2px}
+.opt b{font-family:var(--disp);font-weight:500;font-size:15.5px}
+.opt small{color:var(--mut);font-size:12.5px;line-height:1.5}
+.opt.zap{animation:zap .32s ease}
+@keyframes zap{0%{box-shadow:0 0 0 rgba(0,230,122,0)}45%{border-color:var(--green);box-shadow:0 0 26px var(--green-glow)}100%{}}
+
+/* ---- slider ---- */
+.sliderbox{background:var(--panel);border:1px solid var(--edge);border-radius:8px;padding:30px 28px 26px;max-width:580px;position:relative;overflow:hidden}
+.sliderbox::after{content:'';position:absolute;top:0;left:0;right:0;height:1px;background:linear-gradient(90deg,transparent,var(--cyan-dim),transparent)}
+.bignum{font-family:var(--disp);font-weight:300;font-size:clamp(38px,6.5vw,58px);letter-spacing:-.02em;line-height:1;font-variant-numeric:tabular-nums;color:var(--txt);margin-bottom:6px}
+.ctx{font-family:var(--disp);font-size:12.5px;letter-spacing:.06em;color:var(--cyan);margin-bottom:26px;min-height:16px;text-shadow:0 0 12px var(--cyan-ghost)}
+input[type=range]{width:100%;appearance:none;-webkit-appearance:none;height:3px;border-radius:2px;background:linear-gradient(90deg,var(--green) var(--fill,50%),var(--edge) var(--fill,50%));outline:none}
+input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:24px;height:24px;border-radius:50%;background:var(--void);border:2px solid var(--green);box-shadow:0 0 14px var(--green-glow);cursor:grab}
+input[type=range]:active::-webkit-slider-thumb{cursor:grabbing;box-shadow:0 0 22px var(--green-glow)}
+input[type=range]:focus-visible::-webkit-slider-thumb{outline:2px solid var(--cyan)}
+.range-l{display:flex;justify-content:space-between;font-family:var(--disp);font-size:10.5px;letter-spacing:.08em;color:var(--faint);margin-top:12px}
+
+/* ---- buttons ---- */
+.cta{margin-top:30px;position:relative;display:inline-flex;align-items:center;gap:10px;background:var(--green);color:#04140B;border:none;border-radius:4px;padding:15px 32px;font-family:var(--disp);font-weight:700;font-size:14px;letter-spacing:.08em;cursor:pointer;box-shadow:0 0 24px rgba(0,230,122,.22);transition:.2s;overflow:hidden}
+.cta:hover{box-shadow:0 0 38px rgba(0,230,122,.4);transform:translateY(-1px)}
+.cta:focus-visible{outline:2px solid var(--cyan);outline-offset:2px}
+.cta::after{content:'';position:absolute;top:0;left:-60%;width:40%;height:100%;background:linear-gradient(100deg,transparent,rgba(255,255,255,.35),transparent);transform:skewX(-20deg);animation:sheen 3.2s ease-in-out infinite}
+@keyframes sheen{0%,60%{left:-60%}100%{left:130%}}
+@media(prefers-reduced-motion:reduce){.cta::after{animation:none}}
+.ghost{background:none;border:none;color:var(--mut);font-family:var(--disp);font-size:12px;letter-spacing:.12em;cursor:pointer;margin-top:24px;padding:6px 0;transition:.2s;display:inline-block}
+.ghost:hover{color:var(--cyan)}
+.ghost:focus-visible{outline:2px solid var(--cyan);outline-offset:2px}
+
+/* ================= RESULTS ================= */
+.cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(252px,1fr));gap:14px;margin-top:6px}
+.card{position:relative;background:var(--panel);border:1px solid var(--edge);border-radius:8px;padding:24px 22px;transition:.25s;overflow:hidden}
+.card:hover{transform:translateY(-3px);border-color:var(--cyan-dim)}
+.card.rec{border-color:var(--green);box-shadow:0 0 30px rgba(0,230,122,.10)}
+.card.rec::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:var(--green);box-shadow:0 0 12px var(--green-glow)}
+.tag{position:absolute;top:14px;right:14px;font-family:var(--disp);font-size:9px;letter-spacing:.2em;color:var(--green);border:1px solid rgba(0,230,122,.4);padding:3px 8px;border-radius:2px}
+.card h4{font-family:var(--disp);font-weight:500;font-size:15px;margin-bottom:2px;padding-right:64px}
+.card .desc{font-size:12px;color:var(--mut);margin-bottom:16px;line-height:1.5}
+.rate{font-family:var(--disp);font-weight:300;font-size:26px;letter-spacing:-.01em;font-variant-numeric:tabular-nums}
+.card.rec .rate{color:var(--green);text-shadow:0 0 18px var(--green-glow)}
+.rate small{display:block;font-size:10px;letter-spacing:.16em;color:var(--faint);margin-top:3px}
+.rows{margin-top:16px;border-top:1px solid var(--edge)}
+.rows div{display:flex;justify-content:space-between;gap:10px;padding:8px 0;border-bottom:1px solid var(--edge);font-size:12.5px}
+.rows span:first-child{color:var(--mut)}
+.rows span:last-child{font-family:var(--disp);font-variant-numeric:tabular-nums}
+.verdict{margin:28px 0 8px;padding:18px 22px;background:var(--panel-2);border:1px solid var(--edge);border-left:2px solid var(--cyan);border-radius:0 6px 6px 0;font-size:14.5px;line-height:1.6;color:var(--txt);max-width:660px;box-shadow:inset 0 0 40px rgba(95,233,255,.03)}
+.verdict b{color:var(--cyan);font-family:var(--disp)}
+
+/* ---- gate ---- */
+.gate{margin-top:40px;background:linear-gradient(180deg,var(--panel-2),var(--panel));border:1px solid var(--cyan-dim);border-radius:10px;padding:34px clamp(22px,4vw,40px);max-width:660px;position:relative;overflow:hidden}
+.gate::before{content:'';position:absolute;inset:-40%;background:conic-gradient(from 0deg,transparent 70%,var(--cyan-ghost) 85%,transparent 100%);animation:spin 9s linear infinite;pointer-events:none}
+@keyframes spin{to{transform:rotate(1turn)}}
+@media(prefers-reduced-motion:reduce){.gate::before{animation:none}}
+.gate>*{position:relative}
+.gate h3{font-family:var(--disp);font-weight:500;font-size:22px;margin-bottom:6px}
+.gate p{font-size:13.5px;color:var(--mut);line-height:1.6;margin-bottom:22px}
+.fields{display:grid;grid-template-columns:1fr 1fr;gap:11px;margin-bottom:14px}
+.gate input[type=text],.gate input[type=email],.gate input[type=tel]{background:var(--void);border:1px solid var(--edge);border-radius:4px;padding:13px 14px;color:var(--txt);font-family:var(--body);font-size:14px;width:100%;transition:.2s}
+.gate input:focus{border-color:var(--cyan);box-shadow:0 0 12px var(--cyan-ghost);outline:none}
+.gate input::placeholder{color:var(--faint)}
+.full{grid-column:1/-1}
+.consent{display:flex;gap:10px;align-items:flex-start;font-size:11px;line-height:1.55;color:var(--mut);margin-bottom:18px}
+.consent input{margin-top:2px;accent-color:var(--green)}
+.saved{display:none;margin-top:16px;font-family:var(--disp);font-size:13px;letter-spacing:.05em;color:var(--green);text-shadow:0 0 14px var(--green-glow)}
+
+/* ================= TURBO LAYER ================= */
+.pmeta{font-family:var(--disp);font-size:10px;letter-spacing:.2em;color:var(--faint);margin:-6px 0 24px}
+.pmeta b{color:var(--green);font-weight:500}
+.why-btn{background:none;border:none;color:var(--cyan);font-family:var(--disp);font-size:10.5px;letter-spacing:.14em;cursor:pointer;padding:0;margin:-20px 0 24px;display:inline-flex;gap:6px;align-items:center;opacity:.75;transition:.2s}
+.why-btn:hover{opacity:1}
+.why-box{display:none;border:1px solid var(--edge);border-left:2px solid var(--cyan);background:var(--panel2);padding:13px 16px;border-radius:0 6px 6px 0;font-size:12.5px;color:var(--mut);line-height:1.6;max-width:54ch;margin:-12px 0 26px}
+.why-box.open{display:block;animation:warpIn .3s}
+.tinput{background:var(--panel);border:1px solid var(--edge);border-radius:6px;padding:16px 18px;color:var(--txt);font-family:var(--disp);font-size:20px;width:100%;max-width:420px;transition:.2s;display:block}
+.tinput:focus{border-color:var(--cyan);box-shadow:0 0 16px var(--cyan-ghost);outline:none}
+.inter{position:fixed;inset:0;z-index:60;display:flex;align-items:center;justify-content:center;background:rgba(5,8,12,.78);backdrop-filter:blur(5px);opacity:0;pointer-events:none;transition:opacity .25s}
+.inter.show{opacity:1}
+.inter .chk{width:56px;height:56px;border-radius:50%;border:2px solid var(--green);display:flex;align-items:center;justify-content:center;margin:0 auto 14px;color:var(--green);font-size:24px;box-shadow:0 0 34px var(--green-glow);animation:pop .45s cubic-bezier(.3,1.7,.5,1)}
+@keyframes pop{from{transform:scale(.35);opacity:0}}
+.inter .t1{font-family:var(--disp);font-size:11px;letter-spacing:.32em;color:var(--green);text-align:center}
+.inter .t2{font-family:var(--disp);font-size:19px;margin-top:8px;text-align:center}
+.mback{position:fixed;inset:0;z-index:70;background:rgba(5,8,12,.85);backdrop-filter:blur(7px);display:none;align-items:center;justify-content:center;padding:20px}
+.mback.show{display:flex}
+.modal{background:linear-gradient(180deg,var(--panel2),var(--panel));border:1px solid var(--cyan-dim);border-radius:12px;padding:34px 32px 30px;max-width:460px;width:100%;position:relative;box-shadow:0 30px 90px rgba(0,0,0,.6),0 0 60px var(--cyan-ghost);animation:warpIn .35s}
+.modal .mx{position:absolute;top:10px;right:14px;background:none;border:none;color:var(--faint);font-size:20px;cursor:pointer;padding:4px}
+.modal .mx:hover{color:var(--txt)}
+.modal h3{font-family:var(--disp);font-weight:500;font-size:22px;margin-bottom:6px}
+.modal h3 b{color:var(--cyan);font-weight:500}
+.modal p{font-size:13px;color:var(--mut);line-height:1.6;margin-bottom:18px}
+.mstats{display:flex;border:1px solid var(--edge);border-radius:8px;padding:12px 10px;margin-bottom:18px;background:var(--void);justify-content:space-around}
+.mstat{text-align:center}
+.mstat .l{font-family:var(--disp);font-size:8.5px;letter-spacing:.2em;color:var(--mut);margin-bottom:2px}
+.mstat .n{font-family:var(--disp);font-size:17px;color:var(--green);text-shadow:0 0 12px var(--green-glow);font-variant-numeric:tabular-nums}
+.modal input[type=email]{width:100%;background:var(--void);border:1px solid var(--edge);border-radius:5px;padding:13px 14px;color:var(--txt);font-size:14px;margin-bottom:12px;font-family:var(--body)}
+.modal input[type=email]:focus{border-color:var(--cyan);outline:none;box-shadow:0 0 12px var(--cyan-ghost)}
+.mnote{font-size:10.5px;color:var(--faint);margin-top:12px;line-height:1.55;text-align:center}
+
+footer{position:relative;z-index:2;padding:20px clamp(18px,4vw,48px) 30px;font-size:10.5px;color:var(--faint);line-height:1.7;max-width:860px;margin:0 auto}
+</style>
+</head>
+<body>
+
+<div class="gridworld" aria-hidden="true">
+  <div class="sky-fade"></div>
+  <div class="horizon-glow"></div>
+  <div class="floor"></div>
+</div>
+
+<div class="top">
+  <header>
+    <div class="mark" onclick="restart()">
+      <div class="glyph"><i></i><i></i><i></i></div>
+      <div class="wordmark">CLARO<em>FI</em></div>
+    </div>
+    <span><button class="restart" style="margin-right:8px;border-color:var(--cyan-dim);color:var(--cyan)" onclick="openSave()">SAVE RUN</button><button class="restart" onclick="restart()">RESET</button></span>
+  </header>
+  <nav class="circuit" id="circuit" aria-label="Progress">
+    <span class="node" data-a="0"><span class="dot" data-l="INTENT"></span><span class="wire"></span></span>
+    <span class="node" data-a="1"><span class="dot" data-l="PROPERTY"></span><span class="wire"></span></span>
+    <span class="node" data-a="2"><span class="dot" data-l="NUMBERS"></span><span class="wire"></span></span>
+    <span class="node" data-a="3"><span class="dot" data-l="PROFILE"></span><span class="wire"></span></span>
+    <span class="node" data-a="4"><span class="dot" data-l="YOUR TERMS"></span></span>
+  </nav>
+  <div class="hud" role="status" aria-label="Live estimate">
+    <div class="stat"><div class="l">LOAN</div><div class="n idle" id="hudLoan">—</div></div>
+    <div class="stat"><div class="l">RATE EST</div><div class="n idle" id="hudRate">—</div></div>
+    <div class="stat"><div class="l">EST / MO</div><div class="n idle" id="hudPay">—</div></div>
+  </div>
+</div>
+
+<main class="stage" id="stage" aria-live="polite"></main>
+
+<div class="inter" id="inter" aria-hidden="true"><div><div class="chk">&#10003;</div><div class="t1" id="interT1">SECTION LOCKED</div><div class="t2" id="interT2"></div></div></div>
+
+<div class="mback" id="mback" role="dialog" aria-modal="true" aria-label="Save your run">
+ <div class="modal" id="mBody">
+  <button class="mx" onclick="closeSave()" aria-label="Close">&times;</button>
+  <h3>Wait &mdash; <b>don&rsquo;t lose your run.</b></h3>
+  <p id="mCopy">Your pricing is live. Drop an email and we&rsquo;ll hold everything exactly where you left it.</p>
+  <div class="mstats" id="mStats"></div>
+  <input type="email" id="mEmail" placeholder="you@email.com" aria-label="Email">
+  <button class="cta" style="margin-top:0;width:100%;justify-content:center" onclick="saveEmail()">SAVE MY RUN &rarr;</button>
+  <div class="mnote">One save link. No calls, no lists, no spam &mdash; your numbers stay yours.</div>
+ </div>
+</div>
+
+<footer>
+  CLAROFI prototype. Rates are indicative illustrative ranges, not an offer or commitment to lend; subject to full underwriting. NMLS #2732105 · Equal Housing Lender. Primary-residence loans carry additional required disclosures including APR.\n  <span style="float:right"><a href="desk.html" style="color:var(--faint);text-decoration:none;font-family:var(--disp);letter-spacing:.2em">MLO DESK \u2192</a></span>
+</footer>
+
+<script>
+/* ============ helpers ============ */
+const $=id=>document.getElementById(id);
+const money=n=>'$'+Math.round(n).toLocaleString('en-US');
+const moneyK=n=>n>=1e6?('$'+(n/1e6).toFixed(2).replace(/\.?0+$/,'')+'M'):('$'+Math.round(n/1000)+'K');
+const pct=n=>n.toFixed(3).replace(/0+$/,'').replace(/\.$/,'')+'%';
+function pmt(rate,principal,months=360){const r=rate/100/12;return principal*r/(1-Math.pow(1+r,-months));}
+const reduceMotion=matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+/* animated number roll */
+const hudVals={hudLoan:null,hudRate:null,hudPay:null};
+function rollTo(id,target,fmtFn){
+  const el=$(id);
+  if(target==null){el.textContent='—';el.className='n idle';hudVals[id]=null;return;}
+  el.className='n live';
+  const from=hudVals[id]??target*0.86;hudVals[id]=target;
+  if(reduceMotion){el.textContent=fmtFn(target);return;}
+  const t0=performance.now(),dur=420;
+  (function f(t){const p=Math.min(1,(t-t0)/dur),e=1-Math.pow(1-p,3);
+    el.textContent=fmtFn(from+(target-from)*e);
+    if(p<1)requestAnimationFrame(f);})(t0);
+}
+
+/* ============ state ============ */
+let state={answers:{},flowKey:null,idx:0,history:[]};
+
+/* ============ flows ============ */
+const CREDIT=[
+ {v:'760',label:'760+',sub:'Excellent'},
+ {v:'720',label:'720 – 759',sub:'Very good'},
+ {v:'680',label:'680 – 719',sub:'Good'},
+ {v:'640',label:'640 – 679',sub:'Fair'},
+ {v:'600',label:'Below 640',sub:'There are programs here too'}
+];
+const creditStep={id:'credit',act:3,eyebrow:'PROFILE',q:'Where does your credit sit?',sub:'Best guess. No pull, no impact — this just tunes your pricing.',type:'cards',key:'credit',why:'Every lender\u2019s rate sheet prices by credit band, so a range is all the AI needs. Nothing touches your credit unless you authorize a pull later \u2014 in writing.',opts:CREDIT.map(c=>({v:c.v,label:c.label,sub:c.sub}))};
+
+const START={
+ id:'intent',act:0,eyebrow:'INITIALIZE',
+ q:'What are we financing?',
+ sub:'Answer as you go — your numbers build live in the HUD above.',
+ type:'cards',key:'intent',
+ opts:[
+  {v:'home',label:'Buying a home',sub:'A place you\u2019ll live'},
+  {v:'refi',label:'Refinancing my home',sub:'Better rate, or cash out'},
+  {v:'dscr',label:'Rental property',sub:'Long-term investment — DSCR'},
+  {v:'str',label:'Short-term rental',sub:'Airbnb / VRBO income'},
+  {v:'bridge',label:'Fix & flip',sub:'Bridge capital for a project'},
+  {v:'heloc',label:'Tap my equity',sub:'HELOC or fixed equity loan'}
+ ]
+};
+
+const FLOWS={
+home:[
+ {id:'stagex',act:0,eyebrow:'INTENT',q:'Where are you in the hunt?',sub:'This sets how firm your numbers need to be.',type:'cards',key:'stage',opts:[
+   {v:'looking',label:'Just looking',sub:'Sizing up what I can afford'},
+   {v:'offers',label:'Making offers',sub:'I need a pre-approval that wins'},
+   {v:'contract',label:'Under contract',sub:'The clock is running'}]},
+ {id:'price',act:1,eyebrow:'PROPERTY',q:'What\u2019s your price range?',sub:'Rough is fine — everything stays adjustable.',type:'slider',key:'price',min:200000,max:2500000,step:25000,def:750000,fmt:money},
+ {id:'down',act:2,eyebrow:'NUMBERS',q:'How much down?',sub:'Watch the HUD — every notch moves your payment.',type:'slider',key:'downPct',min:3,max:40,step:1,def:20,fmt:v=>v+'%',ctx:s=>money(s.answers.price*s.answers.downPct/100)+' DOWN · '+money(s.answers.price*(1-s.answers.downPct/100))+' LOAN'},
+ {id:'income',act:3,eyebrow:'PROFILE',q:'How do you earn?',sub:'No documents — this only routes you to the right program.',type:'cards',key:'income',opts:[
+   {v:'w2',label:'Salary / W-2',sub:'Standard employment'},
+   {v:'self',label:'Self-employed, 2+ yrs',sub:'Tax returns tell the story'},
+   {v:'bank',label:'Self-employed — returns undersell me',sub:'Bank-statement programs qualify on deposits'},
+   {v:'asset',label:'Living on assets',sub:'Asset-depletion programs'}]},
+ {id:'vet',act:3,eyebrow:'PROFILE',q:'Military service — you or your spouse?',sub:'VA is often the strongest play on the board: 0% down, no mortgage insurance.',type:'cards',key:'vet',opts:[
+   {v:'yes',label:'Yes',sub:'Active, veteran, or eligible spouse'},
+   {v:'no',label:'No',sub:''}]},
+ creditStep
+],
+refi:[
+ {id:'goal',act:0,eyebrow:'INTENT',q:'What should this refi do?',sub:'',type:'cards',key:'goal',opts:[
+   {v:'rate',label:'Cut my rate / payment',sub:'Same balance, better terms'},
+   {v:'cash',label:'Take cash out',sub:'Convert equity into capital'}]},
+ {id:'value',act:1,eyebrow:'PROPERTY',q:'What\u2019s your home worth today?',sub:'Your honest estimate — verified later.',type:'slider',key:'value',min:200000,max:3000000,step:25000,def:850000,fmt:money},
+ {id:'balance',act:2,eyebrow:'NUMBERS',q:'What do you owe now?',sub:'',type:'slider',key:'balance',min:0,max:2000000,step:10000,def:420000,fmt:money,ctx:s=>'EQUITY '+money(s.answers.value-s.answers.balance)},
+ {id:'cash',act:2,eyebrow:'NUMBERS',q:'How much cash out?',sub:'Capped at 80% of value, all-in.',type:'slider',key:'cash',min:20000,max:600000,step:5000,def:100000,fmt:money,when:s=>s.answers.goal==='cash',ctx:s=>{const l=s.answers.balance+s.answers.cash;return 'NEW LOAN '+money(l)+' · '+Math.round(l/s.answers.value*100)+'% LTV'}},
+ creditStep
+],
+dscr:[
+ {id:'pr',act:0,eyebrow:'INTENT',q:'Buying, or refinancing one you own?',sub:'',type:'cards',key:'pr',opts:[
+   {v:'purchase',label:'Buying',sub:''},{v:'refi',label:'Refinancing',sub:'Rate/term or cash-out'}]},
+ {id:'value',act:1,eyebrow:'PROPERTY',q:'What\u2019s the property worth?',sub:'Purchase price if buying; market value if you own it.',type:'slider',key:'value',min:150000,max:2500000,step:25000,def:485000,fmt:money},
+ {id:'rent',act:1,eyebrow:'PROPERTY',q:'Monthly rent?',sub:'Market rent works. The property qualifies — not your paystub.',type:'slider',key:'rent',min:800,max:15000,step:50,def:3200,fmt:money},
+ {id:'ltv',act:2,eyebrow:'NUMBERS',q:'How much leverage?',sub:'Less leverage buys a better rate. The HUD shows the trade live.',type:'slider',key:'ltv',min:50,max:80,step:5,def:75,fmt:v=>v+'% LTV',ctx:s=>'LOAN '+money(s.answers.value*s.answers.ltv/100)},
+ creditStep
+],
+str:[
+ {id:'pr',act:0,eyebrow:'INTENT',q:'Buying, or refinancing one you own?',sub:'',type:'cards',key:'pr',opts:[
+   {v:'purchase',label:'Buying',sub:''},{v:'refi',label:'Refinancing',sub:''}]},
+ {id:'value',act:1,eyebrow:'PROPERTY',q:'What\u2019s the property worth?',sub:'',type:'slider',key:'value',min:150000,max:3000000,step:25000,def:650000,fmt:money},
+ {id:'rev',act:1,eyebrow:'PROPERTY',q:'Projected annual gross on Airbnb?',sub:'Lenders discount projections ~20%. Real hosting history counts in full.',type:'slider',key:'rev',min:20000,max:400000,step:5000,def:85000,fmt:v=>money(v)+' / YR'},
+ {id:'actuals',act:1,eyebrow:'PROPERTY',q:'12+ months of hosting history on it?',sub:'',type:'cards',key:'actuals',opts:[
+   {v:'yes',label:'Yes — real numbers',sub:'Payout history counts in full'},
+   {v:'no',label:'No — projection',sub:'Standard 20% haircut applies'}]},
+ {id:'ltv',act:2,eyebrow:'NUMBERS',q:'How much leverage?',sub:'STR files cap at 75%.',type:'slider',key:'ltv',min:50,max:75,step:5,def:70,fmt:v=>v+'% LTV',ctx:s=>'LOAN '+money(s.answers.value*s.answers.ltv/100)},
+ creditStep
+],
+bridge:[
+ {id:'buy',act:1,eyebrow:'THE PROJECT',q:'Purchase price?',sub:'',type:'slider',key:'buy',min:100000,max:2000000,step:10000,def:400000,fmt:money},
+ {id:'rehab',act:1,eyebrow:'THE PROJECT',q:'Rehab budget?',sub:'',type:'slider',key:'rehab',min:10000,max:800000,step:5000,def:85000,fmt:money},
+ {id:'arv',act:1,eyebrow:'THE PROJECT',q:'Worth when it\u2019s done?',sub:'The after-repair value anchors the whole loan.',type:'slider',key:'arv',min:150000,max:3000000,step:25000,def:640000,fmt:money,ctx:s=>{const m=s.answers.arv-s.answers.buy-s.answers.rehab;return 'GROSS MARGIN '+money(m)}},
+ {id:'exp',act:3,eyebrow:'PROFILE',q:'How many flips completed?',sub:'Experience moves both leverage and price.',type:'cards',key:'exp',opts:[
+   {v:'0',label:'This is my first',sub:''},
+   {v:'2',label:'1 – 3',sub:''},
+   {v:'5',label:'4 or more',sub:'Operator pricing'}]},
+ creditStep
+],
+heloc:[
+ {id:'value',act:1,eyebrow:'PROPERTY',q:'What\u2019s your home worth today?',sub:'',type:'slider',key:'value',min:200000,max:3000000,step:25000,def:900000,fmt:money},
+ {id:'balance',act:2,eyebrow:'NUMBERS',q:'What\u2019s left on your first mortgage?',sub:'',type:'slider',key:'balance',min:0,max:2000000,step:10000,def:380000,fmt:money,ctx:s=>'EQUITY TO 85% CLTV: '+money(Math.max(0,s.answers.value*.85-s.answers.balance))},
+ {id:'amount',act:2,eyebrow:'NUMBERS',q:'How much access do you want?',sub:'',type:'slider',key:'amount',min:25000,max:500000,step:5000,def:120000,fmt:money},
+ {id:'income',act:2,eyebrow:'NUMBERS',q:'Monthly gross income?',sub:'Household, before taxes. This drives your debt-to-income ratio.',why:'Home-equity loans are consumer credit \u2014 lenders are required to verify you can repay. Income plus debts is that math, and it\u2019s the only reason we ask.',type:'slider',key:'income',min:3000,max:60000,step:500,def:12000,fmt:money},
+ {id:'debts',act:2,eyebrow:'NUMBERS',q:'Monthly debt payments — besides this home?',sub:'Car loans, student loans, credit-card minimums. Ballpark the total.',why:'Every monthly obligation counts against your DTI cap (usually 43\u201350%). Ballpark honestly \u2014 the AI flags a tight file here, before any human ever does.',type:'slider',key:'debts',min:0,max:8000,step:50,def:800,fmt:money,ctx:s=>{const cp=s.answers.balance>0?pmt(6.5,s.answers.balance):0;return 'EST. DTI BEFORE THE DRAW: '+Math.round((s.answers.debts+cp)/s.answers.income*100)+'%'}},
+ {id:'speed',act:3,eyebrow:'PREFERENCES',q:'How fast do you need to close?',sub:'Speed and price trade against each other. Pick your priority — the cards re-rank.',type:'cards',key:'speed',opts:[
+   {v:'days',label:'Days',sub:'5\u20137 day fintech close \u00b7 pays a rate premium'},
+   {v:'weeks',label:'2\u20133 weeks',sub:'Balanced speed and price'},
+   {v:'slow',label:'4\u20136 weeks',sub:'Patience buys the best pricing'}]},
+ {id:'appraisal',act:3,eyebrow:'PREFERENCES',q:'Appraisal — skip it or use it?',sub:'Skipping is faster, but automated values run conservative and can shrink your max line.',type:'cards',key:'appraisal',opts:[
+   {v:'skip',label:'Skip it (AVM)',sub:'Desktop valuation \u00b7 days faster'},
+   {v:'full',label:'Full appraisal',sub:'Can support a higher value \u2014 and a bigger line'}]},
+ {id:'vesting',act:3,eyebrow:'PREFERENCES',q:'Closing as yourself, or in a trust?',sub:'',type:'cards',key:'vesting',opts:[
+   {v:'individual',label:'Individual',sub:'Standard \u2014 keeps every lender in play'},
+   {v:'trust',label:'Living trust',sub:'Adds trust review \u00b7 limits the fastest closers'}]},
+ {id:'citizen',act:3,eyebrow:'PROFILE',q:'Citizenship status?',sub:'This routes you to the right lender set \u2014 there are options across the board.',why:'This never disqualifies you here \u2014 it routes you. Some lenders only fund citizens and green-card holders; others specialize in work-visa and ITIN files. Knowing now saves weeks later.',type:'cards',key:'citizen',opts:[
+   {v:'us',label:'U.S. citizen',sub:''},
+   {v:'pr',label:'Permanent resident',sub:'Green card'},
+   {v:'visa',label:'Work visa',sub:'H-1B, L-1, E-2 and similar'},
+   {v:'itin',label:'ITIN / foreign national',sub:'Narrower panel \u2014 still very doable'}]},
+ {id:'term',act:3,eyebrow:'PREFERENCES',q:'What structure fits your plan?',sub:'',type:'cards',key:'term',opts:[
+   {v:'line',label:'Flexible line',sub:'10-yr draw \u00b7 pay interest only on what you use'},
+   {v:'f10',label:'Fixed \u00b7 10 yr',sub:'Fastest payoff, highest payment'},
+   {v:'f15',label:'Fixed \u00b7 15 yr',sub:'The middle path'},
+   {v:'f20',label:'Fixed \u00b7 20\u201330 yr',sub:'Lowest payment'}]},
+ {id:'prepay',act:3,eyebrow:'PREFERENCES',q:'Early payoff — how much does it matter?',sub:'Some fast, sharply-priced options carry a fee if you close the line inside ~3 years.',type:'cards',key:'prepay',opts:[
+   {v:'none',label:'Must be penalty-free',sub:'I may pay it off early'},
+   {v:'ok',label:'A fee is fine',sub:'Trade it for a better rate'}]},
+ creditStep
+]};
+
+/* ============ pricing (indicative) ============ */
+const CADJ={'760':0,'720':0.125,'680':0.375,'640':0.75,'600':1.375};
+const cadj=()=>CADJ[state.answers.credit]??0.375;
+
+function liveEstimate(){
+ const a=state.answers,f=state.flowKey;if(!f)return null;
+ const c=cadj();
+ try{
+  if(f==='home'&&a.price!=null){const dp=a.downPct??20,loan=a.price*(1-dp/100),r=6.3+c;return{loan,r,p:pmt(r,loan)};}
+  if(f==='refi'&&a.balance!=null){const loan=a.balance+(a.goal==='cash'?(a.cash??0):0),r=6.4+c+(a.goal==='cash'?0.375:0);return{loan,r,p:pmt(r,loan)};}
+  if((f==='dscr'||f==='str')&&a.value!=null){const loan=a.value*((a.ltv??75)/100),r=7.25+c+(f==='str'?0.25:0);return{loan,r,p:pmt(r,loan)};}
+  if(f==='bridge'&&a.buy!=null){const ltc={'0':0.75,'2':0.825,'5':0.85}[a.exp]??0.8;let loan=(a.buy+(a.rehab??0))*ltc;if(a.arv!=null)loan=Math.min(loan,a.arv*0.7);const r=10.25+c*.5;return{loan,r,p:loan*r/100/12};}
+  if(f==='heloc'&&a.value!=null&&a.balance!=null){const cap=a.appraisal==='skip'?0.80:0.85;const max=Math.max(0,a.value*cap-a.balance),loan=Math.min(a.amount??max,max);const citA={us:0,pr:0,visa:0.375,itin:1.25}[a.citizen]??0;const r=8.25+c*.7+(a.speed==='days'?0.5:(a.speed==='slow'?-0.5:0))+citA;const mo={line:0,f10:120,f15:180,f20:240}[a.term]??240;return{loan,r,p:mo===0?loan*r/100/12:pmt(r,loan,mo)};}
+ }catch(e){}
+ return null;
+}
+function refreshHUD(){
+ const e=liveEstimate();
+ if(!e||!isFinite(e.loan)||e.loan<=0){rollTo('hudLoan',null);rollTo('hudRate',null);rollTo('hudPay',null);return;}
+ rollTo('hudLoan',e.loan,moneyK);
+ rollTo('hudRate',e.r,v=>pct(v)+'±');
+ rollTo('hudPay',e.p,money);
+}
+
+/* ============ results (full logic) ============ */
+function computeResults(){
+ const a=state.answers,c=cadj(),out={cards:[],verdict:''};
+
+ if(state.flowKey==='home'){
+  const loan=a.price*(1-a.downPct/100);
+  const mk=(name,desc,lo,hi,extra,rec)=>({name,desc,lo:lo+c,hi:hi+c,rows:[['Loan',money(loan)],['Est. P&I / mo',money(pmt(lo+c,loan))+' – '+money(pmt(hi+c,loan))],...extra],rec});
+  if(a.income==='bank'||a.income==='asset'){
+   out.cards=[mk(a.income==='bank'?'Bank statement 30-yr':'Asset qualifier 30-yr','Deposits qualify you — not tax returns',6.875,7.5,[['Down required','10%+']],true),
+              mk('Bank statement 40-yr IO','Lower payment, 10-yr interest-only',7.125,7.75,[['Structure','10-yr IO']]),
+              mk('Conventional (if returns work)','Worth testing your filed income',6.125,6.5,[['Down',a.downPct+'%']])];
+   out.verdict='Your profile routes to <b>bank-statement lending</b> — deposits qualify you, not your Schedule C. Slightly higher rate, zero tax returns.';
+  }else{
+   out.cards=[mk('Conventional 30-yr','The benchmark',6.125,6.5,[['Down',a.downPct+'%']],a.vet!=='yes'),
+              a.vet==='yes'?mk('VA 30-yr','0% down · no mortgage insurance',5.75,6.125,[['Down required','0%']],true):mk('FHA 30-yr','Easier credit · 3.5% down',5.875,6.25,[['Down required','3.5%'],['Note','MIP applies']]),
+              mk('15-yr fixed','Own it in half the time',5.5,5.875,[['Trade-off','Higher payment']])];
+   out.verdict=a.vet==='yes'?'You\u2019re <b>VA eligible</b> — usually the strongest play on the board: zero down, no mortgage insurance.':a.downPct+'% down on '+money(a.price)+' sets your loan at <b>'+money(loan)+'</b>. '+(a.downPct>=20?'No mortgage insurance at this level.':'Under 20% down, budget for mortgage insurance until equity builds.');
+  }
+ }
+
+ if(state.flowKey==='refi'){
+  const cash=a.goal==='cash',loan=cash?a.balance+a.cash:a.balance,ltv=Math.round(loan/a.value*100),adj=cash?0.375:0;
+  out.cards=[
+   {name:'30-yr '+(cash?'cash-out':'rate/term'),desc:cash?'Equity out, one clean payment':'Reset onto today\u2019s market',lo:6.25+c+adj,hi:6.625+c+adj,rows:[['New loan',money(loan)],['LTV',ltv+'%'],cash?['Cash to you',money(a.cash)]:['Balance',money(a.balance)],['Est. P&I / mo',money(pmt(6.25+c+adj,loan))+' – '+money(pmt(6.625+c+adj,loan))]],rec:true},
+   {name:'15-yr fixed',desc:'Attack the balance',lo:5.625+c+adj,hi:6+c+adj,rows:[['New loan',money(loan)],['Est. P&I / mo',money(pmt(5.625+c+adj,loan,180))+' – '+money(pmt(6+c+adj,loan,180))]]},
+   {name:'HELOC alternative',desc:cash?'Leave your first mortgage untouched':'Equity access without a refi',lo:8+c*.6,hi:9+c*.6,rows:[['Structure','2nd lien · variable'],['First mortgage','stays put']]}];
+  out.verdict=cash?('Pulling <b>'+money(a.cash)+'</b> lands you at <b>'+ltv+'% LTV</b>'+(ltv>80?' — over the 80% cap. Dial the cash back or the value up.':' — inside guidelines with room.')):('At '+money(a.balance)+' on a '+money(a.value)+' home you\u2019re at <b>'+ltv+'% LTV</b> — clean rate/term territory.');
+ }
+
+ if(state.flowKey==='dscr'||state.flowKey==='str'){
+  const isStr=state.flowKey==='str';
+  const income=isStr?(a.rev*(a.actuals==='yes'?1:0.8)/12):a.rent;
+  const loan=a.value*a.ltv/100,strAdj=isStr?0.25:0,ltvAdj=a.ltv>=75?0.125:(a.ltv<=65?-0.125:0),coAdj=(a.pr==='refi')?0.25:0;
+  const base=7.0+c+strAdj+ltvAdj+coAdj;
+  const mkc=(name,desc,d,rec)=>{const lo=base+d,hi=base+0.5+d;const pitia=pmt(lo,loan)+a.value*0.011/12+(isStr?225:150);const dscr=income/pitia;
+   return{name,desc,lo,hi,rows:[['Loan',money(loan)],['Est. P&I / mo',money(pmt(lo,loan))+' – '+money(pmt(hi,loan))],['DSCR','~'+dscr.toFixed(2)+'\u00d7']],rec,dscr};};
+  out.cards=[mkc('5-yr prepay','Best rate — built to hold',0,true),mkc('3-yr prepay','Balanced flexibility',0.25),mkc('No prepay','Full freedom to exit',0.5)];
+  const d=out.cards[0].dscr;
+  out.verdict=d>=1.25?('Coverage runs about <b>'+d.toFixed(2)+'\u00d7</b> — strong file. '+(isStr&&a.actuals!=='yes'?'And that\u2019s <i>after</i> the 20% projection haircut.':'')):
+   d>=1?('Coverage sits near <b>'+d.toFixed(2)+'\u00d7</b> — it qualifies, at tighter pricing. Drop leverage one notch and both improve.'):
+   ('Coverage is <b>'+d.toFixed(2)+'\u00d7</b> — under 1.0. Sub-1.0 programs exist but leverage caps near 70% and the lender set narrows. This becomes a specialist play.');
+ }
+
+ if(state.flowKey==='bridge'){
+  const expAdj={'0':0.75,'2':0.25,'5':0}[a.exp]??0.5;
+  const ltc=Math.min(0.85,{'0':0.75,'2':0.825,'5':0.85}[a.exp]??0.8);
+  const loan=Math.min((a.buy+a.rehab)*ltc,a.arv*0.7);
+  const io=r=>money(loan*r/100/12);
+  const mkb=(name,desc,lo,hi,rows,rec)=>({name,desc,lo:lo+expAdj+c*.5,hi:hi+expAdj+c*.5,rows,rec});
+  out.cards=[
+   mkb('12-mo interest-only','The standard flip structure',9.75,10.5,[['Loan (capped)',money(loan)],['Monthly IO',io(9.75+expAdj+c*.5)+' – '+io(10.5+expAdj+c*.5)],['Max LTC',Math.round(ltc*100)+'%']],true),
+   mkb('18-mo interest-only','Room for a slower exit',10,10.75,[['Loan (capped)',money(loan)],['Monthly IO',io(10+expAdj+c*.5)+' – '+io(10.75+expAdj+c*.5)]]),
+   mkb('Bridge-to-DSCR','Auto-refi into a rental loan at exit',9.875,10.625,[['Exit','Built-in DSCR takeout'],['Best for','Holding, not selling']])];
+  const m=a.arv-a.buy-a.rehab;
+  out.verdict='All-in basis <b>'+money(a.buy+a.rehab)+'</b> vs a <b>'+money(a.arv)+'</b> ARV = <b>'+money(m)+'</b> gross ('+Math.round(m/(a.buy+a.rehab)*100)+'%). '+(m/(a.buy+a.rehab)>=0.2?'Healthy spread.':'Thin once carry and closing costs bite — pressure-test that ARV.');
+ }
+
+ if(state.flowKey==='heloc'){
+  const cltvCap=a.appraisal==='skip'?0.80:0.85;
+  const max=Math.max(0,a.value*cltvCap-a.balance),line=Math.min(a.amount,max),cltv=Math.round((a.balance+line)/a.value*100);
+  const citAdj={us:0,pr:0,visa:0.375,itin:1.25}[a.citizen]??0;
+  const ppAdj=a.prepay==='none'?0.25:0;
+  const months={line:0,f10:120,f15:180,f20:240}[a.term]??240;
+  const termLabel={line:'flex line',f10:'fixed 10-yr',f15:'fixed 15-yr',f20:'fixed 20\u201330 yr'}[a.term]??'line';
+  const pay=r=>months===0?money(line*r/100/12)+' IO':money(pmt(r,line,months));
+  const trustNote=a.vesting==='trust'?' +3\u20135d trust review':'';
+  const mk=(name,desc,base,close,appr,fee,rec)=>{const lo=base+c*.7+citAdj+ppAdj,hi=lo+0.875;
+    return{name,desc,lo,hi,rows:[['Amount',money(line)],['Est. / mo',pay(lo)+' \u2013 '+pay(hi)],['Close time',close],['Appraisal',appr],['Early-payoff fee',fee]],rec};};
+  const wantFast=a.speed==='days',wantSlow=a.speed==='slow';
+  out.cards=[
+   mk('Rapid close \u2014 '+termLabel,'Fintech-speed \u00b7 AVM valuation \u00b7 pay for the pace',8.5,'5\u20137 days'+trustNote,'None (AVM)',a.prepay==='none'?'None (priced in)':'If closed <3 yrs',wantFast),
+   mk('Balanced \u2014 '+termLabel,'Hybrid process \u00b7 desktop or drive-by value',8.0,'2\u20133 weeks'+trustNote,'Light','None',!wantFast&&!wantSlow),
+   mk('Best price \u2014 '+termLabel,'Full-process pricing \u00b7 patience pays',7.5,'4\u20136 weeks'+trustNote,'Full','None',wantSlow)];
+  const currPI=a.balance>0?pmt(6.5,a.balance):0;
+  const newPay=months===0?line*(8+c*.7+citAdj)/100/12:pmt(8+c*.7+citAdj,line,months);
+  const dti=a.income?Math.round((a.debts+currPI+newPay)/a.income*100):null;
+  let v='';
+  v+=line<a.amount?('At '+Math.round(cltvCap*100)+'% CLTV'+(a.appraisal==='skip'?' (the AVM cap)':'')+' your ceiling is <b>'+money(max)+'</b> \u2014 under the '+money(a.amount)+' you wanted'+(a.appraisal==='skip'?'. A full appraisal often unlocks more.':'.')):('<b>'+money(line)+'</b> fits at '+cltv+'% CLTV \u2014 your first mortgage doesn\u2019t move.');
+  if(dti!=null)v+=' All-in DTI lands near <b>'+dti+'%</b> \u2014 '+(dti<=43?'clean approval territory.':(dti<=50?'tight; a longer term or smaller draw loosens it.':'over most caps \u2014 trim the draw or clear a debt first.'));
+  if(a.vesting==='trust'&&wantFast)v+=' One conflict: <b>trust vesting</b> knocks out most true 5\u20137 day closers \u2014 plan on trust review adding days, or close individually and deed back in.';
+  if(a.citizen==='itin')v+=' <b>ITIN / foreign national</b> narrows the panel and prices wider \u2014 a specialist lane, and exactly what your reviewer handles.';
+  if(a.citizen==='visa')v+=' Work-visa files are broadly lendable \u2014 expect a modest pricing bump and visa-validity documentation.';
+  out.verdict=v;
+ }
+ return out;
+}
+
+/* ============ rendering ============ */
+function currentFlow(){return state.flowKey?FLOWS[state.flowKey].filter(s=>!s.when||s.when(state)):[];}
+function setCircuit(act){document.querySelectorAll('#circuit .node').forEach(n=>{const a=+n.dataset.a;n.className='node'+(a<act?' done':(a===act?' on':''));});}
+
+const NAME_STEP={id:'name',act:0,eyebrow:'QUICK ONE',q:'What should we call you?',sub:'First name is plenty \u2014 the run gets personal from here.',type:'text',key:'name'};
+const ACT_NAMES=['INTENT','PROPERTY','NUMBERS','PROFILE'];
+let _lastAct=0,_fwd=false;
+
+function flash(actIdx){
+ if(reduceMotion)return;
+ $('interT1').textContent='\u2713 '+ACT_NAMES[actIdx]+' COMPLETE';
+ const nm=state.answers.name;
+ $('interT2').textContent=nm?('Nice pace, '+nm+'.'):'Nice pace. Keep rolling.';
+ $('inter').classList.add('show');
+ setTimeout(()=>$('inter').classList.remove('show'),950);
+}
+
+function render(){
+ const stage=$('stage');stage.innerHTML='';
+ let step,f=null,pos=0,total=0;
+ if(!state.flowKey)step=START;
+ else if(state.idx===-1)step=NAME_STEP;
+ else{f=currentFlow();step=f[state.idx];if(!step){renderResults();return;}}
+ if(state.flowKey){f=f||currentFlow();pos=state.idx+2;total=f.length+2;}
+ if(_fwd&&state.flowKey&&state.idx>=0&&step.act>_lastAct)flash(_lastAct);
+ _lastAct=step.act;_fwd=false;
+ setCircuit(step.act);refreshHUD();
+
+ const el=document.createElement('div');el.className='step';
+ const meta=state.flowKey?`<div class="pmeta">STEP ${pos} OF ${total}${pos/total>=0.68?' \u00b7 <b>ALMOST THERE</b>':''}</div>`:'';
+ const nm=state.answers.name;
+ const qText=(step.hail&&nm)?step.q.replace('{name}',nm):step.q;
+ el.innerHTML=`<div class="eyebrow">${step.eyebrow}</div>${meta}<h1 class="q">${qText}</h1>${step.sub?`<p class="sub">${step.sub}</p>`:''}`;
+ if(step.why){
+  const wb=document.createElement('button');wb.className='why-btn';wb.innerHTML='\u24D8&nbsp; WHY WE ASK';
+  const box=document.createElement('div');box.className='why-box';box.textContent=step.why;
+  wb.onclick=()=>box.classList.toggle('open');
+  el.appendChild(wb);el.appendChild(box);
+ }
+
+ if(step.type==='text'){
+  const inp=document.createElement('input');inp.className='tinput';inp.type='text';inp.placeholder='Your first name';inp.maxLength=30;inp.setAttribute('aria-label','First name');
+  inp.value=state.answers.name||'';
+  el.appendChild(inp);
+  const nxt=document.createElement('button');nxt.className='cta';nxt.textContent='LET\u2019S RUN IT \u2192';
+  nxt.onclick=()=>{state.answers.name=inp.value.trim();advance();};
+  inp.addEventListener('keydown',e=>{if(e.key==='Enter')nxt.click();});
+  const wrap=document.createElement('div');wrap.appendChild(nxt);el.appendChild(wrap);
+  const sk=document.createElement('button');sk.className='ghost';sk.textContent='SKIP \u2014 KEEP IT ANONYMOUS';
+  sk.onclick=()=>{state.answers.name='';advance();};
+  el.appendChild(document.createElement('br'));el.appendChild(sk);
+  setTimeout(()=>inp.focus(),80);
+ }
+ if(step.type==='cards'){
+  const grid=document.createElement('div');grid.className='opts';
+  step.opts.forEach(o=>{
+   const b=document.createElement('button');b.className='opt';b.innerHTML=`<b>${o.label}</b>${o.sub?`<small>${o.sub}</small>`:''}`;
+   b.onclick=()=>{state.answers[step.key]=o.v;b.classList.add('zap');refreshHUD();
+     setTimeout(()=>advance(),reduceMotion?0:230);};
+   grid.appendChild(b);
+  });
+  el.appendChild(grid);
+ }
+ if(step.type==='slider'){
+  const box=document.createElement('div');box.className='sliderbox';
+  const val=state.answers[step.key]??step.def;state.answers[step.key]=val;
+  box.innerHTML=`<div class="bignum" id="sv">${step.fmt(val)}</div><div class="ctx" id="sc">${step.ctx?step.ctx(state):'&nbsp;'}</div>
+   <input type="range" id="sl" min="${step.min}" max="${step.max}" step="${step.step}" value="${val}" aria-label="${step.q}">
+   <div class="range-l"><span>${step.fmt(step.min)}</span><span>${step.fmt(step.max)}</span></div>`;
+  el.appendChild(box);
+  const nxt=document.createElement('button');nxt.className='cta';nxt.textContent='LOCK IT IN \u2192';
+  nxt.onclick=()=>advance();
+  el.appendChild(document.createElement('div')).appendChild(nxt);
+  setTimeout(()=>{const sl=$('sl');
+    const paint=()=>{const p=(sl.value-step.min)/(step.max-step.min)*100;sl.style.setProperty('--fill',p+'%');};paint();
+    sl.oninput=()=>{state.answers[step.key]=+sl.value;$('sv').textContent=step.fmt(+sl.value);if(step.ctx)$('sc').innerHTML=step.ctx(state);paint();refreshHUD();};},0);
+ }
+ if(state.history.length){
+  const bk=document.createElement('button');bk.className='ghost';bk.textContent='\u2190 BACK';bk.onclick=goBack;
+  el.appendChild(document.createElement('br'));el.appendChild(bk);
+ }
+ stage.appendChild(el);
+ window.scrollTo({top:0,behavior:'instant'});
+}
+
+function advance(){
+ state.history.push({flowKey:state.flowKey,idx:state.idx});
+ if(!state.flowKey){state.flowKey=state.answers.intent;state.idx=-1;}
+ else state.idx++;
+ _fwd=true;
+ render();
+}
+function goBack(){const p=state.history.pop();if(!p)return;state.flowKey=p.flowKey;state.idx=p.idx;_fwd=false;render();}
+function restart(){state={answers:{},flowKey:null,idx:0,history:[]};_lastAct=0;_fwd=false;render();}
+
+function renderResults(){
+ if(_fwd)flash(3);_fwd=false;
+ setCircuit(4);refreshHUD();
+ const r=computeResults(),stage=$('stage');stage.innerHTML='';
+ const nm=state.answers.name;
+ const el=document.createElement('div');el.className='step';
+ el.innerHTML=`<div class="eyebrow">YOUR TERMS</div>
+  <h1 class="q">${nm?nm+', here\u2019s where your deal prices.':'Here\u2019s where your deal prices.'}</h1>
+  <p class="sub">Three structures, computed from your run. Ranges are indicative — locking your scenario firms them against the live lender panel.</p>`;
+ const cards=document.createElement('div');cards.className='cards';
+ r.cards.forEach(cd=>{
+  const c=document.createElement('div');c.className='card'+(cd.rec?' rec':'');
+  c.innerHTML=`${cd.rec?'<span class="tag">OUR PICK</span>':''}<h4>${cd.name}</h4><div class="desc">${cd.desc}</div>
+   <div class="rate">${pct(cd.lo)} – ${pct(cd.hi)}<small>INDICATIVE RANGE</small></div>
+   <div class="rows">${cd.rows.map(rr=>`<div><span>${rr[0]}</span><span>${rr[1]}</span></div>`).join('')}</div>`;
+  cards.appendChild(c);
+ });
+ el.appendChild(cards);
+ const v=document.createElement('div');v.className='verdict';v.innerHTML=r.verdict;el.appendChild(v);
+
+ const gate=document.createElement('div');gate.className='gate';
+ gate.innerHTML=`<h3>Lock this scenario.</h3>
+  <p>We hold your run exactly as configured, then move straight into verification — soft credit, assets, income. Your ranges firm up in minutes, and a live human from the desk owns your file from there.</p>
+  <div class="fields">
+   <input type="text" id="gFirst" placeholder="First name" aria-label="First name">
+   <input type="text" id="gLast" placeholder="Last name" aria-label="Last name">
+   <input type="email" id="gEmail" class="full" placeholder="Email" aria-label="Email">
+   <input type="tel" id="gPhone" class="full" placeholder="Mobile" aria-label="Mobile">
+  </div>
+  <label class="consent"><input type="checkbox" id="tcpa">
+   I agree to receive calls and texts about my inquiry, including via automated technology, at the number provided. Consent isn\u2019t required to obtain a loan. Msg &amp; data rates may apply.</label>
+  <button class="cta" style="margin-top:0" onclick="saveRun()">LOCK & START PRE-APPROVAL \u2192</button>
+  <div class="saved" id="saved">\u25B8 SCENARIO LOCKED. Spinning up verification\u2026</div>`;
+ el.appendChild(gate);
+
+ const bk=document.createElement('button');bk.className='ghost';bk.textContent='\u2190 ADJUST MY RUN';bk.onclick=goBack;
+ el.appendChild(document.createElement('br'));el.appendChild(bk);
+ stage.appendChild(el);
+ window.scrollTo({top:0,behavior:'instant'});
+}
+function saveRun(){
+ if(!$('tcpa').checked){$('tcpa').focus();return;}
+ const first=$('gFirst').value.trim(),email=$('gEmail').value.trim();
+ if(!first){$('gFirst').focus();$('gFirst').style.borderColor='#FF6B6B';return;}
+ if(!/.+@.+\..+/.test(email)){$('gEmail').focus();$('gEmail').style.borderColor='#FF6B6B';return;}
+ const e=liveEstimate(),r=computeResults();
+ const pick=r.cards.find(c=>c.rec)||r.cards[0];
+ const file={
+  id:'CF-'+Date.now().toString(36).toUpperCase().slice(-6),
+  created:new Date().toISOString(),
+  first,last:$('gLast').value.trim(),email,phone:$('gPhone').value.trim(),
+  flowKey:state.flowKey,answers:state.answers,
+  pricing:{loan:e?e.loan:0,rate:e?e.r:0,payment:e?e.p:0,
+   pick:pick?{name:pick.name,lo:pick.lo,hi:pick.hi}:null,
+   cards:r.cards.map(c=>({name:c.name,desc:c.desc,lo:c.lo,hi:c.hi,rec:!!c.rec})),
+   verdict:r.verdict},
+  verifications:{credit:null,assets:null,income:null},
+  status:'priced'
+ };
+ try{
+  localStorage.setItem('clarofi_file',JSON.stringify(file));
+  const pl=JSON.parse(localStorage.getItem('clarofi_pipeline')||'[]');
+  pl.unshift(file);localStorage.setItem('clarofi_pipeline',JSON.stringify(pl.slice(0,20)));
+ }catch(_){}
+ runSaved=true;
+ $('saved').style.display='block';
+ setTimeout(()=>{
+  location.href='preapprove.html#f='+encodeURIComponent(btoa(unescape(encodeURIComponent(JSON.stringify(file)))));
+ },900);
+}
+
+/* ---------- exit-intent + save-run capture ---------- */
+let exitShown=false,runSaved=false;
+document.addEventListener('mouseout',e=>{if(!e.relatedTarget&&e.clientY<=8)maybeExit();});
+document.addEventListener('keydown',e=>{if(e.key==='Escape')closeSave();});
+function maybeExit(){
+ if(exitShown||runSaved)return;
+ if(!state.flowKey||Object.keys(state.answers).length<3)return;
+ exitShown=true;openSave();
+}
+function openSave(){
+ if(runSaved){$('mback').classList.add('show');return;}
+ const e=liveEstimate(),s=$('mStats');
+ if(e&&isFinite(e.loan)&&e.loan>0){
+  s.style.display='flex';
+  s.innerHTML=`<div class="mstat"><div class="l">LOAN</div><div class="n">${moneyK(e.loan)}</div></div>
+   <div class="mstat"><div class="l">RATE EST</div><div class="n">${pct(e.r)}\u00b1</div></div>
+   <div class="mstat"><div class="l">EST / MO</div><div class="n">${money(e.p)}</div></div>`;
+ }else s.style.display='none';
+ const nm=state.answers.name;
+ $('mCopy').textContent=(nm?nm+' \u2014 your':'Your')+' pricing is live. Drop an email and we\u2019ll hold everything exactly where you left it.';
+ $('mback').classList.add('show');
+ setTimeout(()=>{const em=$('mEmail');if(em)em.focus();},60);
+}
+function closeSave(){$('mback').classList.remove('show');}
+function saveEmail(){
+ const em=$('mEmail'),v=em.value.trim();
+ if(!/.+@.+\..+/.test(v)){em.focus();em.style.borderColor='#FF6B6B';return;}
+ runSaved=true;
+ const nm=state.answers.name;
+ $('mBody').innerHTML=`<button class="mx" onclick="closeSave()" aria-label="Close">\u00d7</button>
+  <h3>\u2713 <b>Run saved${nm?', '+nm:''}.</b></h3>
+  <p>Your link is headed to ${v}. Pick up exactly where you left off \u2014 or keep the momentum now.</p>
+  <button class="cta" style="width:100%;justify-content:center" onclick="closeSave()">KEEP GOING \u2192</button>`;
+}
+
+render();
+</script>
+</body>
+</html>

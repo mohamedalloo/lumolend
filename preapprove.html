@@ -1,0 +1,378 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CLAROFI — Pre-Approval Engine</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;700&family=Inter:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="assets/theme.css">
+<style>
+/* ================= LAYOUT ================= */
+.wrap{position:relative;z-index:2;max-width:1120px;margin:0 auto;padding:clamp(28px,5vh,54px) clamp(18px,4vw,40px) 26vh}
+.cols{display:grid;grid-template-columns:1fr 340px;gap:26px;align-items:start;margin-top:34px}
+@media(max-width:900px){.cols{grid-template-columns:1fr}}
+
+/* ================= VERIFICATION MODULES ================= */
+.vmod{background:var(--panel);border:1px solid var(--edge);border-radius:8px;padding:22px 24px;margin-bottom:14px;position:relative;overflow:hidden;transition:border-color .3s}
+.vmod::before{content:'';position:absolute;left:0;top:0;bottom:0;width:2px;background:var(--faint);transition:.3s}
+.vmod.running::before{background:var(--cyan);box-shadow:0 0 12px var(--cyan)}
+.vmod.done{border-color:rgba(0,230,122,.35)}
+.vmod.done::before{background:var(--green);box-shadow:0 0 12px var(--green-glow)}
+.vhead{display:flex;justify-content:space-between;align-items:center;gap:14px}
+.vhead h3{font-family:var(--disp);font-weight:500;font-size:16.5px}
+.vhead .vsub{font-size:12.5px;color:var(--mut);margin-top:3px;line-height:1.5;max-width:46ch}
+.vbtn{flex-shrink:0;background:none;border:1px solid var(--cyan-dim);color:var(--cyan);font-family:var(--disp);font-weight:500;font-size:11.5px;letter-spacing:.14em;padding:11px 20px;border-radius:4px;cursor:pointer;transition:.2s;white-space:nowrap}
+.vbtn:hover{border-color:var(--cyan);box-shadow:0 0 18px var(--cyan-ghost)}
+.vbtn:disabled{border-color:var(--edge);color:var(--faint);cursor:default;box-shadow:none}
+.vlog{display:none;font-family:var(--mono);font-size:11.5px;line-height:2;color:var(--mut);margin-top:16px;border-top:1px solid var(--edge);padding-top:14px}
+.vlog.show{display:block}
+.vlog .ln{opacity:0;animation:lineIn .25s forwards}
+@keyframes lineIn{to{opacity:1}}
+.vlog .ok{color:var(--green)}.vlog .cy{color:var(--cyan)}
+.vresult{display:none;margin-top:16px;border-top:1px solid var(--edge);padding-top:14px;gap:26px}
+.vresult.show{display:flex;flex-wrap:wrap;animation:warpIn .4s}
+.vr .l{font-family:var(--disp);font-size:9px;letter-spacing:.22em;color:var(--mut);margin-bottom:3px}
+.vr .n{font-family:var(--disp);font-size:19px;color:var(--green);text-shadow:0 0 14px var(--green-glow);font-variant-numeric:tabular-nums}
+.vcheck{width:26px;height:26px;border-radius:50%;border:1.5px solid var(--green);color:var(--green);display:none;align-items:center;justify-content:center;font-size:13px;box-shadow:0 0 16px var(--green-glow);animation:pop .4s cubic-bezier(.3,1.7,.5,1)}
+.vmod.done .vcheck{display:flex}.vmod.done .vbtn{display:none}
+
+/* ================= CERTAINTY RAIL ================= */
+.rail{position:sticky;top:22px}
+.meterbox{background:linear-gradient(180deg,var(--panel-2),var(--panel));border:1px solid var(--cyan-dim);border-radius:10px;padding:26px 24px;position:relative;overflow:hidden}
+.meterbox::before{content:'';position:absolute;inset:-40%;background:conic-gradient(from 0deg,transparent 72%,var(--cyan-ghost) 86%,transparent 100%);animation:spin 10s linear infinite;pointer-events:none}
+@keyframes spin{to{transform:rotate(1turn)}}
+@media(prefers-reduced-motion:reduce){.meterbox::before{animation:none}}
+.meterbox>*{position:relative}
+.mlabel{font-family:var(--disp);font-size:9.5px;letter-spacing:.28em;color:var(--mut);margin-bottom:6px}
+.mpct{font-family:var(--disp);font-weight:300;font-size:52px;line-height:1;letter-spacing:-.02em;font-variant-numeric:tabular-nums}
+.mpct small{font-size:22px;color:var(--mut)}
+.mstatus{font-family:var(--disp);font-size:11px;letter-spacing:.24em;margin-top:6px;color:var(--cyan)}
+.mstatus.gr{color:var(--green);text-shadow:0 0 14px var(--green-glow)}
+.segs{display:flex;gap:5px;margin:20px 0 8px}
+.seg{flex:1;height:5px;border-radius:2px;background:var(--edge);position:relative;transition:.5s}
+.seg.on{background:var(--green);box-shadow:0 0 10px var(--green-glow)}
+.seg.base{background:var(--cyan);box-shadow:0 0 8px var(--cyan-dim)}
+.seglbl{display:flex;gap:5px}
+.seglbl span{flex:1;font-family:var(--disp);font-size:7.5px;letter-spacing:.14em;color:var(--faint);text-align:center}
+
+/* rate band */
+.bandbox{margin-top:22px;border-top:1px solid var(--edge);padding-top:18px}
+.bandbox .l{font-family:var(--disp);font-size:9.5px;letter-spacing:.24em;color:var(--mut);margin-bottom:14px}
+.track{position:relative;height:34px}
+.track .rail-line{position:absolute;left:0;right:0;top:15px;height:2px;background:var(--edge);border-radius:1px}
+.band{position:absolute;top:11px;height:10px;border-radius:5px;background:linear-gradient(90deg,rgba(0,230,122,.85),rgba(95,233,255,.85));box-shadow:0 0 18px rgba(0,230,122,.25);transition:left .8s cubic-bezier(.22,.9,.3,1),width .8s cubic-bezier(.22,.9,.3,1)}
+.bnum{display:flex;justify-content:space-between;font-family:var(--disp);font-size:15px;font-variant-numeric:tabular-nums;margin-top:8px}
+.bnum span{transition:.3s}
+.bspread{text-align:center;font-family:var(--disp);font-size:10px;letter-spacing:.18em;color:var(--mut);margin-top:6px}
+.bspread b{color:var(--green);font-weight:500}
+
+/* human card */
+.human{margin-top:14px;background:var(--panel);border:1px solid var(--edge);border-radius:10px;padding:18px 20px;display:flex;gap:14px;align-items:center}
+.avatar{width:44px;height:44px;border-radius:50%;background:radial-gradient(circle at 30% 30%,#16303c,#0a161d);border:1px solid var(--cyan-dim);display:flex;align-items:center;justify-content:center;font-family:var(--disp);font-weight:500;color:var(--cyan);font-size:14px;flex-shrink:0;position:relative}
+.avatar::after{content:'';position:absolute;bottom:1px;right:1px;width:9px;height:9px;border-radius:50%;background:var(--green);border:2px solid var(--panel);box-shadow:0 0 8px var(--green-glow)}
+.human .hn{font-family:var(--disp);font-weight:500;font-size:14px}
+.human .ht{font-size:11px;color:var(--mut);line-height:1.5;margin-top:2px}
+.human .ht b{color:var(--green);font-weight:500}
+
+/* ================= LETTER ================= */
+.lettersec{margin-top:44px;display:none}
+.lettersec.show{display:block;animation:warpIn .5s}
+.powerbox{background:var(--panel);border:1px solid var(--edge);border-radius:8px;padding:24px 26px;max-width:560px;margin-bottom:22px}
+.powerbox .bignum{font-family:var(--disp);font-weight:300;font-size:clamp(34px,5vw,48px);letter-spacing:-.02em;line-height:1;font-variant-numeric:tabular-nums;margin-bottom:4px}
+.powerbox .ctx{font-family:var(--disp);font-size:12px;letter-spacing:.06em;color:var(--cyan);margin-bottom:22px;min-height:15px}
+input[type=range]{width:100%;appearance:none;-webkit-appearance:none;height:3px;border-radius:2px;background:linear-gradient(90deg,var(--green) var(--fill,100%),var(--edge) var(--fill,100%));outline:none}
+input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:22px;height:22px;border-radius:50%;background:var(--void);border:2px solid var(--green);box-shadow:0 0 14px var(--green-glow);cursor:grab}
+.range-l{display:flex;justify-content:space-between;font-family:var(--disp);font-size:10px;letter-spacing:.08em;color:var(--faint);margin-top:10px}
+.powernote{font-size:11.5px;color:var(--mut);line-height:1.6;margin-top:14px;max-width:52ch}
+
+/* the paper */
+.paper{background:#F4F1EA;color:#1A2129;border-radius:6px;max-width:660px;padding:clamp(28px,4vw,48px);font-family:var(--body);box-shadow:0 24px 80px rgba(0,0,0,.5),0 0 0 1px rgba(255,255,255,.06);position:relative}
+.paper .phead{display:flex;justify-content:space-between;align-items:flex-start;border-bottom:2px solid #1A2129;padding-bottom:16px;margin-bottom:22px}
+.paper .pmark{font-family:var(--disp);font-weight:700;font-size:15px;letter-spacing:.28em}
+.paper .pmark em{font-style:normal;color:#0E7D66}
+.paper .pmeta{text-align:right;font-size:10.5px;color:#5A6570;line-height:1.7;font-family:var(--mono)}
+.paper h2{font-family:var(--disp);font-weight:500;font-size:20px;margin-bottom:16px;letter-spacing:.02em}
+.paper p{font-size:13px;line-height:1.75;color:#2A343E;margin-bottom:13px}
+.paper .amt{font-family:var(--disp);font-weight:500;font-size:30px;letter-spacing:-.01em;color:#0E7D66;margin:6px 0 14px}
+.paper table{width:100%;border-collapse:collapse;margin:16px 0 20px;font-size:12px}
+.paper td{padding:7px 0;border-bottom:1px solid #D9D4C8}
+.paper td:first-child{color:#5A6570;width:46%}
+.paper td:last-child{font-family:var(--mono);font-size:11.5px}
+.paper .conds{font-size:11px;color:#5A6570;line-height:1.7;margin:14px 0 20px}
+.paper .sig{display:flex;justify-content:space-between;align-items:flex-end;margin-top:26px;padding-top:18px;border-top:1px solid #D9D4C8}
+.paper .sname{font-family:'Space Grotesk';font-size:19px;font-style:italic;margin-bottom:3px}
+.paper .stitle{font-size:10.5px;color:#5A6570;line-height:1.6}
+.paper .seal{width:64px;height:64px;border:2px solid #0E7D66;border-radius:50%;display:flex;align-items:center;justify-content:center;text-align:center;font-family:var(--disp);font-size:7px;letter-spacing:.14em;color:#0E7D66;line-height:1.5;transform:rotate(-8deg)}
+.letteractions{display:flex;gap:12px;margin-top:22px;flex-wrap:wrap}
+
+/* empty state */
+.empty{text-align:center;padding:12vh 20px;position:relative;z-index:2}
+.empty .q{margin-bottom:14px}
+.empty .sub{margin:0 auto 30px}
+
+@media print{
+  body{background:#fff}
+  body>*{display:none!important}
+  #printzone{display:block!important;position:absolute;top:0;left:0;width:100%}
+  .paper{box-shadow:none;border-radius:0;max-width:100%}
+}
+</style>
+</head>
+<body>
+
+<div class="gridworld" aria-hidden="true"><div class="sky-fade"></div><div class="horizon-glow"></div><div class="floor"></div></div>
+
+<header class="bar">
+  <a class="mark" href="index.html">
+    <div class="glyph"><i></i><i></i><i></i></div>
+    <div class="wordmark">CLARO<em>FI</em><span class="mode">/ PRE-APPROVAL</span></div>
+  </a>
+  <span class="chip" id="fileChip">FILE <b>—</b></span>
+</header>
+
+<main class="wrap" id="main"></main>
+
+<div id="printzone" style="display:none"></div>
+
+<footer class="legal">
+  CLAROFI prototype. Verifications are simulated for demonstration. Pre-approval letters are illustrative and conditional; not a commitment to lend. NMLS #2732105 · Equal Housing Lender.
+</footer>
+
+<script src="assets/core.js"></script>
+<script>
+'use strict';
+let file=loadLoanFile();
+
+/* ---------------- empty state ---------------- */
+function renderEmpty(){
+ $('main').innerHTML=`<div class="empty step">
+   <div class="eyebrow" style="justify-content:center">NO ACTIVE RUN</div>
+   <h1 class="q">Nothing to verify — yet.</h1>
+   <p class="sub">Price a scenario first and lock it in. The run lands here for verification and pre-approval.</p>
+   <a class="cta" href="index.html">START A RUN &rarr;</a>&nbsp;&nbsp;
+   <button class="cta cyan" onclick="loadDemo()">LOAD A DEMO FILE</button>
+ </div>`;
+}
+function loadDemo(){
+ file=demoFiles()[0];
+ file.id='CF-DEMO00';file.verifications={credit:null,assets:null,income:null};file.status='priced';
+ saveLoanFile(file);renderApp();
+}
+
+/* ---------------- verification specs ---------------- */
+function vSpecs(){
+ const a=file.answers,fk=file.flowKey;
+ const score=CREDIT_MID[a.credit]??712;
+ const dp=fk==='home'?a.price*(a.downPct??20)/100:(fk==='bridge'?(a.buy+a.rehab)*0.2:file.pricing.loan*0.12);
+ const need=Math.round((dp+file.pricing.loan*0.02)/1000)*1000;
+ const verified=Math.round(need*1.32/1000)*1000;
+ let incTitle='Income',incSub='',incLog=[],incResult=[];
+ if(fk==='dscr'||fk==='str'){
+   incTitle='Property cash flow';
+   incSub='The property qualifies — not your paystub. We verify the rent story instead.';
+   incLog=['&gt; pulling comparable rents …','&gt; '+(fk==='str'?'AirDNA market projection cross-check …':'rent roll + lease audit …'),'<span class="cy">&gt; coverage model re-run</span>','<span class="ok">&#10003; cash flow verified</span>'];
+   incResult=[['METHOD',fk==='str'?'STR REVENUE':'MARKET RENT'],['COVERAGE','CONFIRMED']];
+ }else if(a.income==='bank'){
+   incSub='12 months of deposits, read directly. No tax returns.';
+   incLog=['&gt; secure bank link established …','&gt; scanning 12-mo deposit history …','&gt; filtering transfers &amp; one-offs …','<span class="cy">&gt; qualifying income computed</span>','<span class="ok">&#10003; deposit income verified</span>'];
+   incResult=[['METHOD','BANK STATEMENT'],['STATUS','QUALIFIED']];
+ }else if(fk==='bridge'){
+   incTitle='Track record';
+   incSub='For bridge capital, your completed projects are the income story.';
+   incLog=['&gt; county records sweep …','&gt; matching completed exits …','<span class="ok">&#10003; operator history confirmed</span>'];
+   incResult=[['METHOD','EXPERIENCE'],['TIER',(a.exp==='5'?'OPERATOR':'STANDARD')]];
+ }else{
+   incSub='Instant employment + income check. No pay stubs to dig up.';
+   incLog=['&gt; instant VOE request sent …','&gt; employer record matched …','<span class="cy">&gt; income stream confirmed</span>','<span class="ok">&#10003; income verified</span>'];
+   incResult=[['METHOD','INSTANT VOE'],['STATUS','VERIFIED']];
+ }
+ return [
+  {key:'credit',title:'Credit — soft pull',sub:'Tri-merge soft inquiry. Zero impact on your score, ever.',btn:'RUN SOFT PULL',
+   log:['&gt; tri-merge soft inquiry …','&gt; Experian · Equifax · TransUnion responding …','<span class="cy">&gt; mid-score computed</span>','<span class="ok">&#10003; credit locked into pricing</span>'],
+   result:()=>[['MID SCORE',String(score)],['IMPACT','NONE (SOFT)']],
+   data:()=>({score,at:new Date().toISOString()})},
+  {key:'assets',title:'Assets & reserves',sub:'Read-only bank link. We confirm funds to close — nothing moves.',btn:'LINK ACCOUNTS',
+   log:['&gt; read-only connection opened …','&gt; balances snapshotted across accounts …','&gt; seasoning check (60-day) …','<span class="ok">&#10003; funds to close confirmed</span>'],
+   result:()=>[['VERIFIED',moneyK(verified)],['NEEDED','~'+moneyK(need)]],
+   data:()=>({verified,accounts:2,at:new Date().toISOString()})},
+  {key:'income',title:incTitle,sub:incSub,btn:'VERIFY',log:incLog,
+   result:()=>incResult,
+   data:()=>({method:incResult[0][1],at:new Date().toISOString()})}
+ ];
+}
+
+/* ---------------- render ---------------- */
+function renderApp(){
+ $('fileChip').innerHTML='FILE <b>'+file.id+'</b> · '+FLOW_LABELS[file.flowKey].toUpperCase();
+ const nm=file.first||file.answers.name||'';
+ const pick=file.pricing.pick;
+ $('main').innerHTML=`
+ <div class="step">
+  <div class="eyebrow">VERIFICATION RUNWAY</div>
+  <h1 class="q">${nm?nm+', let’s turn pricing into proof.':'Let’s turn pricing into proof.'}</h1>
+  <p class="sub">Your run priced at <b style="color:var(--txt)">${pct(pick.lo)} – ${pct(pick.hi)}</b> on ${pick.name}. Every verification below removes uncertainty — watch the band tighten. All three, and your pre-approval letter generates on the spot.</p>
+  <div class="cols">
+    <div id="mods"></div>
+    <div class="rail">
+      <div class="meterbox">
+        <div class="mlabel">FILE CERTAINTY</div>
+        <div class="mpct"><span id="mp">35</span><small>%</small></div>
+        <div class="mstatus" id="ms">PRICED — UNVERIFIED</div>
+        <div class="segs">
+          <div class="seg base"></div><div class="seg" id="segC"></div><div class="seg" id="segA"></div><div class="seg" id="segI"></div>
+        </div>
+        <div class="seglbl"><span>PRICED</span><span>CREDIT</span><span>ASSETS</span><span>INCOME</span></div>
+        <div class="bandbox">
+          <div class="l">YOUR RATE BAND — LIVE</div>
+          <div class="track"><div class="rail-line"></div><div class="band" id="band"></div></div>
+          <div class="bnum"><span id="blo"></span><span id="bhi"></span></div>
+          <div class="bspread" id="bsp"></div>
+        </div>
+      </div>
+      <div class="human">
+        <div class="avatar">AD</div>
+        <div>
+          <div class="hn">Alex Delgado</div>
+          <div class="ht">Senior MLO · 14 yrs · NMLS #2732105<br><b>&#9679; watching this file live</b></div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="lettersec" id="lettersec"></div>
+ </div>`;
+ const mods=$('mods');
+ vSpecs().forEach(sp=>{
+  const d=document.createElement('div');d.className='vmod'+(file.verifications[sp.key]?' done':'');d.id='vm_'+sp.key;
+  d.innerHTML=`<div class="vhead"><div><h3>${sp.title}</h3><div class="vsub">${sp.sub}</div></div>
+    <button class="vbtn" onclick="runV('${sp.key}')">${sp.btn}</button><div class="vcheck">&#10003;</div></div>
+    <div class="vlog" id="vlog_${sp.key}"></div>
+    <div class="vresult" id="vres_${sp.key}"></div>`;
+  mods.appendChild(d);
+  if(file.verifications[sp.key])showResult(sp,false);
+ });
+ syncRail(false);
+ if(certainty(file)===100)showLetterSection();
+}
+
+function runV(key){
+ const sp=vSpecs().find(s=>s.key===key);
+ const mod=$('vm_'+key),log=$('vlog_'+key);
+ mod.classList.add('running');mod.querySelector('.vbtn').disabled=true;
+ log.classList.add('show');log.innerHTML='';
+ const stepMs=reduceMotion?0:520;
+ sp.log.forEach((ln,i)=>{
+  setTimeout(()=>{const p=document.createElement('div');p.className='ln';p.innerHTML=ln;log.appendChild(p);},i*stepMs);
+ });
+ setTimeout(()=>{
+  file.verifications[key]=sp.data();
+  if(file.verifications.credit&&file.verifications.assets&&file.verifications.income&&file.status==='priced')file.status='verified';
+  saveLoanFile(file);
+  mod.classList.remove('running');mod.classList.add('done');
+  showResult(sp,true);
+  syncRail(true);
+  if(certainty(file)===100)showLetterSection();
+ },sp.log.length*stepMs+(reduceMotion?0:250));
+}
+
+function showResult(sp,animate){
+ const r=$('vres_'+sp.key);
+ r.innerHTML=sp.result().map(x=>`<div class="vr"><div class="l">${x[0]}</div><div class="n">${x[1]}</div></div>`).join('');
+ r.classList.add('show');
+}
+
+function syncRail(){
+ const c=certainty(file);
+ $('mp').textContent=c;
+ $('segC').className='seg'+(file.verifications.credit?' on':'');
+ $('segA').className='seg'+(file.verifications.assets?' on':'');
+ $('segI').className='seg'+(file.verifications.income?' on':'');
+ const ms=$('ms');
+ if(c===100){ms.textContent='FULLY VERIFIED';ms.className='mstatus gr';}
+ else if(c>35){ms.textContent='FIRMING — '+(100-c)+'% TO GO';ms.className='mstatus';}
+ else{ms.textContent='PRICED — UNVERIFIED';ms.className='mstatus';}
+ // rate band
+ const p=file.pricing.pick,b=firmedBand(file);
+ const min=p.lo-0.25,max=p.hi+0.25,W=max-min;
+ const band=$('band');
+ band.style.left=((b.lo-min)/W*100)+'%';
+ band.style.width=((b.hi-b.lo)/W*100)+'%';
+ $('blo').textContent=pct(b.lo);$('bhi').textContent=pct(b.hi);
+ const spread=((b.hi-b.lo)*100).toFixed(0);
+ $('bsp').innerHTML=c===100?'<b>BAND LOCKED · '+spread+' BPS WIDE</b>':spread+' BPS OF UNCERTAINTY LEFT';
+}
+
+/* ---------------- letter ---------------- */
+let power=null;
+function showLetterSection(){
+ const sec=$('lettersec');
+ if(sec.classList.contains('show'))return;
+ const maxLoan=file.pricing.loan;
+ power=power??maxLoan;
+ sec.innerHTML=`
+  <div class="eyebrow">PRE-APPROVAL</div>
+  <h1 class="q">Verified. Now weaponize it.</h1>
+  <p class="sub" style="margin-bottom:26px">Your letter generates at any amount up to your max — sellers never need to know your ceiling. Dial it to the offer, print, done.</p>
+  <div class="powerbox">
+    <div class="bignum" id="pwv">${money(power)}</div>
+    <div class="ctx" id="pwc"></div>
+    <input type="range" id="pw" min="${Math.round(maxLoan*0.5)}" max="${maxLoan}" step="5000" value="${power}" aria-label="Letter amount">
+    <div class="range-l"><span>${moneyK(maxLoan*0.5)}</span><span>MAX ${moneyK(maxLoan)}</span></div>
+    <div class="powernote">Negotiation armor: a letter at exactly your offer price keeps your full buying power invisible. Regenerate anytime — each one is tracked by ID.</div>
+  </div>
+  <div id="paperwrap"></div>
+  <div class="letteractions">
+    <button class="cta" onclick="window.print()">PRINT / PDF &darr;</button>
+    <button class="cta cyan" onclick="toDesk()">ROUTE MY FILE TO THE DESK &rarr;</button>
+  </div>`;
+ sec.classList.add('show');
+ const sl=$('pw');
+ const paint=()=>{const p=(sl.value-sl.min)/(sl.max-sl.min)*100;sl.style.setProperty('--fill',p+'%');};
+ paint();
+ sl.oninput=()=>{power=+sl.value;$('pwv').textContent=money(power);paint();renderPaper();};
+ if(file.status!=='preapproved'&&file.status!=='desk'){file.status='preapproved';saveLoanFile(file);}
+ renderPaper();
+ setTimeout(()=>sec.scrollIntoView({behavior:reduceMotion?'instant':'smooth',block:'start'}),150);
+}
+
+function renderPaper(){
+ const b=firmedBand(file),d=new Date(),exp=new Date(Date.now()+60*86400000);
+ const fmt=x=>x.toLocaleDateString('en-US',{month:'long',day:'numeric',year:'numeric'});
+ const lid=file.id+'-L'+String(Math.round(power/1000)).padStart(4,'0');
+ const fullName=(file.first+' '+(file.last||'')).trim();
+ const html=`
+ <div class="paper" id="letterPaper">
+  <div class="phead">
+    <div><div class="pmark">CLARO<em>FI</em></div><div style="font-size:9px;letter-spacing:.2em;color:#5A6570;margin-top:4px;font-family:var(--disp)">LENDING DESK</div></div>
+    <div class="pmeta">LETTER ${lid}<br>ISSUED ${fmt(d).toUpperCase()}<br>VALID THROUGH ${fmt(exp).toUpperCase()}</div>
+  </div>
+  <h2>Conditional Pre-Approval</h2>
+  <p><b>${fullName}</b> has been reviewed by the CLAROFI lending desk and is conditionally pre-approved for financing in the amount of:</p>
+  <div class="amt">${money(power)}</div>
+  <table>
+    <tr><td>Program</td><td>${file.pricing.pick.name}</td></tr>
+    <tr><td>Purpose</td><td>${FLOW_LABELS[file.flowKey]}</td></tr>
+    <tr><td>Verified rate band</td><td>${pct(b.lo)} – ${pct(b.hi)}</td></tr>
+    <tr><td>Credit</td><td>Soft tri-merge · mid ${file.verifications.credit?file.verifications.credit.score:'—'}</td></tr>
+    <tr><td>Assets</td><td>Funds to close verified electronically</td></tr>
+    <tr><td>Income</td><td>${file.verifications.income?file.verifications.income.method:'—'}</td></tr>
+  </table>
+  <p class="conds">Subject to: satisfactory property appraisal and title; no material change in verified credit, income, or assets; full underwriting review. This letter is not a rate lock or commitment to lend.</p>
+  <div class="sig">
+    <div><div class="sname">Alex Delgado</div><div class="stitle">Senior Mortgage Loan Originator<br>NMLS #2732105 · desk@clarofi.com</div></div>
+    <div class="seal">VERIFIED<br>✓<br>CLAROFI DESK</div>
+  </div>
+ </div>`;
+ $('paperwrap').innerHTML=html;
+ $('printzone').innerHTML=html;
+}
+
+function toDesk(){
+ file.status='desk';saveLoanFile(file);
+ location.href='desk.html'+encodeFileHash(file);
+}
+
+file?renderApp():renderEmpty();
+</script>
+</body>
+</html>
