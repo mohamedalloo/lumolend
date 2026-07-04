@@ -232,6 +232,8 @@ footer{position:relative;z-index:2;padding:20px clamp(18px,4vw,48px) 30px;font-s
   LumoLend prototype. Rates are indicative illustrative ranges, not an offer or commitment to lend; subject to full underwriting. NMLS #2732105 · Equal Housing Lender. Primary-residence loans carry additional required disclosures including APR. <span style="float:right"><a href="desk.html" style="color:var(--faint);text-decoration:none;font-family:var(--disp);letter-spacing:.2em">MLO DESK &rarr;</a></span>
 </footer>
 
+<script src="assets/config.js"></script>
+<script src="assets/backend.js"></script>
 <script>
 /* ============ helpers ============ */
 const $=id=>document.getElementById(id);
@@ -641,6 +643,7 @@ function saveRun(){
   const pl=JSON.parse(localStorage.getItem('lumolend_pipeline')||'[]');
   pl.unshift(file);localStorage.setItem('lumolend_pipeline',JSON.stringify(pl.slice(0,20)));
  }catch(_){}
+ try{window.lumoSaveLead&&lumoSaveLead(file);}catch(_){}
  runSaved=true;
  $('saved').style.display='block';
  setTimeout(()=>{
@@ -676,6 +679,7 @@ function saveEmail(){
  const em=$('mEmail'),v=em.value.trim();
  if(!/.+@.+\..+/.test(v)){em.focus();em.style.borderColor='#FF6B6B';return;}
  runSaved=true;
+ try{window.lumoSaveRun&&lumoSaveRun(state,v,liveEstimate());}catch(_){}
  const nm=state.answers.name;
  $('mBody').innerHTML=`<button class="mx" onclick="closeSave()" aria-label="Close">\u00d7</button>
   <h3>\u2713 <b>Run saved${nm?', '+nm:''}.</b></h3>
