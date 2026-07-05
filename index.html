@@ -78,6 +78,11 @@ header{display:flex;justify-content:space-between;align-items:center;padding:20p
 .q{font-family:var(--disp);font-weight:500;font-size:clamp(26px,4.4vw,42px);line-height:1.14;letter-spacing:-.01em;margin-bottom:10px}
 .sub{color:var(--mut);font-size:15px;line-height:1.6;max-width:56ch;margin-bottom:34px}
 
+/* ---- option groups ---- */
+.grouplbl{display:flex;align-items:center;gap:12px;font-family:var(--disp);font-size:10px;letter-spacing:.26em;color:var(--cyan);margin:30px 0 12px;opacity:.85}
+.grouplbl.first{margin-top:0}
+.grouplbl::after{content:'';flex:1;height:1px;background:linear-gradient(90deg,var(--edge),transparent)}
+
 /* ---- option cards ---- */
 .opts{display:grid;grid-template-columns:repeat(auto-fill,minmax(232px,1fr));gap:12px}
 .opt{position:relative;background:var(--panel);border:1px solid var(--edge);border-radius:6px;padding:18px 20px;text-align:left;cursor:pointer;color:var(--txt);font-family:var(--body);transition:border-color .2s,transform .18s,box-shadow .25s;display:flex;flex-direction:column;gap:5px;overflow:hidden}
@@ -275,13 +280,15 @@ const START={
  q:'What are we financing?',
  sub:'Answer as you go — your numbers build live in the HUD above.',
  type:'cards',key:'intent',
- opts:[
-  {v:'home',label:'Buying a home',sub:'A place you\u2019ll live'},
-  {v:'refi',label:'Refinancing my home',sub:'Better rate, or cash out'},
-  {v:'dscr',label:'Rental property',sub:'Long-term investment — DSCR'},
-  {v:'str',label:'Short-term rental',sub:'Airbnb / VRBO income'},
-  {v:'bridge',label:'Fix & flip',sub:'Bridge capital for a project'},
-  {v:'heloc',label:'Tap my equity',sub:'HELOC or fixed equity loan'}
+ groups:[
+  {label:'PRIMARY HOME',opts:[
+   {v:'home',label:'Buying a home',sub:'A place you\u2019ll live'},
+   {v:'refi',label:'Refinancing my home',sub:'Better rate, or cash out'},
+   {v:'heloc',label:'HELOC / HELOAN',sub:'Tap your equity — flexible line or fixed loan'}]},
+  {label:'INVESTMENT',opts:[
+   {v:'dscr',label:'Rental property',sub:'Long-term investment — DSCR'},
+   {v:'str',label:'Short-term rental',sub:'Airbnb / VRBO income'},
+   {v:'bridge',label:'Fix & flip',sub:'Bridge capital for a project'}]}
  ]
 };
 
@@ -538,14 +545,22 @@ function render(){
   setTimeout(()=>inp.focus(),80);
  }
  if(step.type==='cards'){
-  const grid=document.createElement('div');grid.className='opts';
-  step.opts.forEach(o=>{
-   const b=document.createElement('button');b.className='opt';b.innerHTML=`<b>${o.label}</b>${o.sub?`<small>${o.sub}</small>`:''}`;
-   b.onclick=()=>{state.answers[step.key]=o.v;b.classList.add('zap');refreshHUD();
-     setTimeout(()=>advance(),reduceMotion?0:230);};
-   grid.appendChild(b);
-  });
-  el.appendChild(grid);
+  const mkGrid=opts=>{
+   const grid=document.createElement('div');grid.className='opts';
+   opts.forEach(o=>{
+    const b=document.createElement('button');b.className='opt';b.innerHTML=`<b>${o.label}</b>${o.sub?`<small>${o.sub}</small>`:''}`;
+    b.onclick=()=>{state.answers[step.key]=o.v;b.classList.add('zap');refreshHUD();
+      setTimeout(()=>advance(),reduceMotion?0:230);};
+    grid.appendChild(b);
+   });
+   return grid;
+  };
+  if(step.groups){
+   step.groups.forEach((g,i)=>{
+    const lbl=document.createElement('div');lbl.className='grouplbl'+(i===0?' first':'');lbl.textContent=g.label;
+    el.appendChild(lbl);el.appendChild(mkGrid(g.opts));
+   });
+  }else el.appendChild(mkGrid(step.opts));
  }
  if(step.type==='slider'){
   const box=document.createElement('div');box.className='sliderbox';
