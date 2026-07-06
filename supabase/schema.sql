@@ -67,7 +67,7 @@ create table if not exists public.mlos (
 );
 
 insert into public.mlos (slug, name, email, nmls)
-values ('m-alloo', 'Mohamed Alloo', 'alloo.mohamed@gmail.com', '2732105')
+values ('m-alloo', 'Moh Alloo', 'alloo.mohamed@gmail.com', '2732105')
 on conflict (slug) do nothing;
 
 -- ---------- row level security ----------

@@ -250,7 +250,7 @@ function genLenders(f){
 
 function genScript(f){
  const a=f.answers,nm=f.first||'there',s=[];
- s.push(['OPEN','“Hi '+nm+' — Mohamed from the LumoLend desk. I’ve got your whole run in front of me, so no forms, no re-asking. Twelve minutes and you’ll know the exact path.”']);
+ s.push(['OPEN','“Hi '+nm+' — Moh from the LumoLend desk. I’ve got your whole run in front of me, so no forms, no re-asking. Twelve minutes and you’ll know the exact path.”']);
  if(f.flowKey==='home'&&a.vet==='yes')s.push(['LEAD WITH','VA eligibility — zero down, no MI. It priced strongest on their run; confirm entitlement is unused.']);
  else if(f.flowKey==='home'&&a.income==='bank')s.push(['LEAD WITH','“Your deposits qualify you — not your tax returns.” They chose the bank-statement path; validate 12 months of statements are reachable.']);
  else if(f.flowKey==='heloc')s.push(['LEAD WITH','They optimized for '+({days:'speed — confirm the rate premium is understood',weeks:'balance — confirm 2–3 weeks works for their use of funds',slow:'price — confirm nothing forces the timeline'}[a.speed]||'their term choice')+'.']);
@@ -274,7 +274,7 @@ function fmtAns(k,v){
 /* ---------------- render ---------------- */
 function renderQueue(){
  $('qCount').innerHTML='<b>'+files.length+'</b>';
- $('deskChip').innerHTML='PIPELINE <b>'+files.length+' FILES</b> · MOHAMED ALLOO';
+ $('deskChip').innerHTML='PIPELINE <b>'+files.length+' FILES</b> · MOH ALLOO';
  $('qList').innerHTML='';
  files.forEach(f=>{
   const b=document.createElement('button');b.className='qitem'+(f.id===sel?' sel':'');
