@@ -17,6 +17,18 @@
 3. They submit contact details and property address; the scenario routes to a licensed mortgage loan originator, who is introduced by email.
 4. The loan officer reviews the file, firms pricing against the lender panel, and guides the borrower to closing.
 
+## Guides (expert content, reviewed by a licensed MLO)
+
+- https://lumolend.com/guides/ — guide hub
+- https://lumolend.com/guides/dscr-loans/ — DSCR loans: coverage math, requirements, prepay trade-offs
+- https://lumolend.com/guides/bank-statement-loans/ — bank-statement mortgages for the self-employed
+- https://lumolend.com/guides/airbnb-str-loans/ — financing short-term rentals; actuals vs projections
+- https://lumolend.com/guides/fix-and-flip-bridge-loans/ — bridge loans: LTC, ARV, draws, carry math
+- https://lumolend.com/guides/heloc-vs-cash-out-refi/ — HELOC vs cash-out refinance decision math
+- https://lumolend.com/guides/va-loans-zero-down/ — VA loan eligibility, COE, funding fee, entitlement
+- https://lumolend.com/guides/dti-explained/ — debt-to-income: formula, caps, and fixes
+- https://lumolend.com/guides/preapproval-vs-prequalification/ — what sellers actually trust
+
 ## Company
 
 - Brand: LumoLend, operated by Honest Casa LLC (dba LumoLend)
