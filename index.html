@@ -144,11 +144,7 @@ input[type=range]:focus-visible::-webkit-slider-thumb{outline:2px solid var(--cy
 .gate>*{position:relative}
 .gate h3{font-family:var(--disp);font-weight:500;font-size:22px;margin-bottom:6px}
 .gate p{font-size:13.5px;color:var(--mut);line-height:1.6;margin-bottom:22px}
-.fields{display:grid;grid-template-columns:1fr 1fr;gap:11px;margin-bottom:14px}
-.gate input[type=text],.gate input[type=email],.gate input[type=tel]{background:var(--void);border:1px solid var(--edge);border-radius:4px;padding:13px 14px;color:var(--txt);font-family:var(--body);font-size:14px;width:100%;transition:.2s}
-.gate input:focus{border-color:var(--cyan);box-shadow:0 0 12px var(--cyan-ghost);outline:none}
-.gate input::placeholder{color:var(--faint)}
-.full{grid-column:1/-1}
+.lockmodal{max-width:560px}
 .consent{display:flex;gap:10px;align-items:flex-start;font-size:11px;line-height:1.55;color:var(--mut);margin-bottom:18px}
 .consent input{margin-top:2px;accent-color:var(--green)}
 .saved{display:none;margin-top:16px;font-family:var(--disp);font-size:13px;letter-spacing:.05em;color:var(--green);text-shadow:0 0 14px var(--green-glow)}
@@ -183,6 +179,29 @@ input[type=range]:focus-visible::-webkit-slider-thumb{outline:2px solid var(--cy
 .modal input[type=email]{width:100%;background:var(--void);border:1px solid var(--edge);border-radius:5px;padding:13px 14px;color:var(--txt);font-size:14px;margin-bottom:12px;font-family:var(--body)}
 .modal input[type=email]:focus{border-color:var(--cyan);outline:none;box-shadow:0 0 12px var(--cyan-ghost)}
 .mnote{font-size:10.5px;color:var(--faint);margin-top:12px;line-height:1.55;text-align:center}
+
+/* ---- lock & review form ---- */
+.lfields{display:grid;grid-template-columns:1fr 1fr;gap:11px;margin:16px 0 14px}
+.lfields input{background:var(--void);border:1px solid var(--edge);border-radius:4px;padding:13px 14px;color:var(--txt);font-family:var(--body);font-size:14px;width:100%;transition:.2s}
+.lfields input:focus{border-color:var(--cyan);box-shadow:0 0 12px var(--cyan-ghost);outline:none}
+.lfields input::placeholder{color:var(--faint)}
+.lfields input.ok{border-color:rgba(0,230,122,.5)}
+.lfields input.bad{border-color:#FF6B6B}
+.lfull{grid-column:1/-1}
+.fhint{grid-column:1/-1;font-family:var(--disp);font-size:10px;letter-spacing:.08em;color:#FF9B9B;margin:-7px 0 0;min-height:13px}
+.fhint b{color:var(--cyan);cursor:pointer;font-weight:500}
+.fhint.okk{color:var(--green)}
+
+/* ---- sample paper (enticement) ---- */
+.spaper{position:relative;background:#F4F1EA;color:#1A2129;border-radius:6px;padding:20px 22px;margin:16px 0 18px;overflow:hidden}
+.spaper::after{content:'SAMPLE';position:absolute;top:34%;left:-12%;right:-12%;text-align:center;font-family:var(--disp);font-weight:700;font-size:52px;letter-spacing:.32em;color:rgba(26,33,41,.12);transform:rotate(-14deg);pointer-events:none}
+.spaper h4{font-family:var(--disp);font-weight:700;font-size:12px;letter-spacing:.22em;color:#0E7D66}
+.spaper .samt{font-family:var(--disp);font-weight:500;font-size:30px;letter-spacing:-.01em;margin:8px 0 2px}
+.spaper .srows{margin-top:10px;font-size:12px}
+.spaper .srows div{display:flex;justify-content:space-between;gap:12px;padding:6px 0;border-bottom:1px solid #D9D4C8}
+.spaper .srows span:first-child{color:#5A6570}
+.spaper .blurred{filter:blur(4px);user-select:none;pointer-events:none}
+.spaper .smeta{font-size:9.5px;color:#5A6570;margin-top:12px;line-height:1.55}
 
 
 /* ---- trust strip ---- */
@@ -243,6 +262,36 @@ footer{position:relative;z-index:2;padding:20px clamp(18px,4vw,48px) 30px;font-s
   <button class="cta" style="margin-top:0;width:100%;justify-content:center" onclick="saveEmail()">SAVE MY RUN &rarr;</button>
   <div class="mnote">One save link. No calls, no lists, no spam &mdash; your numbers stay yours.</div>
  </div>
+</div>
+
+<div class="mback" id="lockback" role="dialog" aria-modal="true" aria-label="Submit scenario for review">
+ <div class="modal lockmodal">
+  <button class="mx" onclick="closeLock(true)" aria-label="Close">&times;</button>
+  <h3>Lock it in. <b>Get it reviewed.</b></h3>
+  <p>Exactly as it appears on your ID &mdash; this becomes your loan file. About 60 seconds, no documents.</p>
+  <div class="mstats" id="lockStats"></div>
+  <div class="lfields">
+   <input type="text" id="lFirst" placeholder="Legal first name" autocomplete="given-name" aria-label="Legal first name">
+   <input type="text" id="lLast" placeholder="Legal last name" autocomplete="family-name" aria-label="Legal last name">
+   <input type="email" id="lEmail" class="lfull" placeholder="Email" autocomplete="email" aria-label="Email">
+   <div class="fhint" id="emailHint"></div>
+   <input type="tel" id="lPhone" class="lfull" placeholder="Mobile phone" autocomplete="tel-national" inputmode="numeric" aria-label="Mobile phone">
+   <div class="fhint" id="phoneHint"></div>
+   <input type="text" id="lStreet" class="lfull" placeholder="Street address" autocomplete="address-line1" aria-label="Street address">
+   <input type="text" id="lUnit" placeholder="Unit / Apt # (condos)" autocomplete="address-line2" aria-label="Unit or apartment">
+   <input type="text" id="lCity" placeholder="City" autocomplete="address-level2" aria-label="City">
+   <input type="text" id="lState" placeholder="State (CA)" autocomplete="address-level1" maxlength="2" aria-label="State">
+   <input type="text" id="lZip" placeholder="ZIP" autocomplete="postal-code" inputmode="numeric" maxlength="10" aria-label="ZIP">
+  </div>
+  <label class="consent"><input type="checkbox" id="tcpa">
+   By checking this box, I expressly consent to receive calls, texts and emails about my inquiry from LumoLend and its loan officers at the contact info provided &mdash; including via automated technology and prerecorded messages, and even if my number appears on a federal, state or company Do-Not-Call list. Consent isn&rsquo;t required to obtain a loan. Msg &amp; data rates may apply.</label>
+  <button class="cta" style="margin-top:0;width:100%;justify-content:center" onclick="submitScenario()">SUBMIT FOR REVIEW &rarr;</button>
+  <div class="mnote">No hard pull &middot; no documents &middot; a licensed loan officer reviews your exact scenario.</div>
+ </div>
+</div>
+
+<div class="mback" id="entback" role="dialog" aria-modal="true" aria-label="Before you go">
+ <div class="modal lockmodal" id="entBody"></div>
 </div>
 
 <section class="truststrip" aria-label="Lender network">
@@ -319,7 +368,7 @@ home:[
  {id:'price',act:1,eyebrow:'PROPERTY',q:'What\u2019s your price range?',sub:'Rough is fine — everything stays adjustable.',type:'slider',key:'price',min:200000,max:2500000,step:25000,def:750000,fmt:money},
  {id:'down',act:2,eyebrow:'NUMBERS',q:'How much down?',sub:'Watch the HUD — every notch moves your payment.',type:'slider',key:'downPct',min:3,max:40,step:1,def:20,fmt:v=>v+'%',ctx:s=>money(s.answers.price*s.answers.downPct/100)+' DOWN · '+money(s.answers.price*(1-s.answers.downPct/100))+' LOAN'},
  {id:'incomeAmt',act:2,eyebrow:'NUMBERS',q:'Monthly gross income?',sub:'Household, before taxes. This drives your debt-to-income ratio.',why:'Lenders qualify you on income versus obligations. A ballpark now means your pricing and your first call are grounded in reality — no documents yet.',type:'slider',key:'incomeAmt',min:3000,max:60000,step:500,def:12000,fmt:money},
- {id:'debts',act:2,eyebrow:'NUMBERS',q:'Monthly debt payments — besides housing?',sub:'Credit-card minimums, car loans, student loans, other mortgages. Ballpark the total.',type:'slider',key:'debts',min:0,max:10000,step:50,def:800,fmt:money,ctx:s=>{const loan=s.answers.price*(1-(s.answers.downPct??20)/100);return 'EST. DTI WITH THIS HOME: '+Math.round((s.answers.debts+pmt(6.5,loan))/s.answers.incomeAmt*100)+'%'}},
+ {id:'debts',act:2,eyebrow:'NUMBERS',q:'Monthly debt payments — besides housing?',sub:'Credit-card minimums, car loans, student loans, other mortgages. Ballpark the total.',type:'slider',key:'debts',min:0,max:10000,step:50,def:800,fmt:money,ctx:s=>{const loan=s.answers.price*(1-(s.answers.downPct??20)/100);return 'EST. DTI WITH THIS HOME: '+Math.round((s.answers.debts+pmt(5.5,loan))/s.answers.incomeAmt*100)+'%'}},
  {id:'income',act:3,eyebrow:'PROFILE',q:'How do you earn?',sub:'No documents — this only routes you to the right program.',type:'cards',key:'income',opts:[
    {v:'w2',label:'Salary / W-2',sub:'Standard employment'},
    {v:'self',label:'Self-employed, 2+ yrs',sub:'Tax returns tell the story'},
@@ -338,7 +387,7 @@ refi:[
  {id:'balance',act:2,eyebrow:'NUMBERS',q:'What do you owe now?',sub:'',type:'slider',key:'balance',min:0,max:2000000,step:10000,def:420000,fmt:money,ctx:s=>'EQUITY '+money(s.answers.value-s.answers.balance)},
  {id:'cash',act:2,eyebrow:'NUMBERS',q:'How much cash out?',sub:'Capped at 80% of value, all-in.',type:'slider',key:'cash',min:20000,max:600000,step:5000,def:100000,fmt:money,when:s=>s.answers.goal==='cash',ctx:s=>{const l=s.answers.balance+s.answers.cash;return 'NEW LOAN '+money(l)+' · '+Math.round(l/s.answers.value*100)+'% LTV'}},
  {id:'incomeAmt',act:2,eyebrow:'NUMBERS',q:'Monthly gross income?',sub:'Household, before taxes. This drives your debt-to-income ratio.',why:'Lenders qualify you on income versus obligations. A ballpark now means your pricing and your first call are grounded in reality — no documents yet.',type:'slider',key:'incomeAmt',min:3000,max:60000,step:500,def:12000,fmt:money},
- {id:'debts',act:2,eyebrow:'NUMBERS',q:'Monthly debt payments — besides this home?',sub:'Credit-card minimums, car loans, student loans, other mortgages. Ballpark the total.',type:'slider',key:'debts',min:0,max:10000,step:50,def:800,fmt:money,ctx:s=>{const loan=s.answers.balance+(s.answers.goal==='cash'?(s.answers.cash??0):0);return 'EST. DTI AFTER REFI: '+Math.round((s.answers.debts+pmt(6.5,loan))/s.answers.incomeAmt*100)+'%'}},
+ {id:'debts',act:2,eyebrow:'NUMBERS',q:'Monthly debt payments — besides this home?',sub:'Credit-card minimums, car loans, student loans, other mortgages. Ballpark the total.',type:'slider',key:'debts',min:0,max:10000,step:50,def:800,fmt:money,ctx:s=>{const loan=s.answers.balance+(s.answers.goal==='cash'?(s.answers.cash??0):0);return 'EST. DTI AFTER REFI: '+Math.round((s.answers.debts+pmt(5.5,loan))/s.answers.incomeAmt*100)+'%'}},
  creditStep
 ],
 dscr:[
@@ -410,11 +459,11 @@ function liveEstimate(){
  const a=state.answers,f=state.flowKey;if(!f)return null;
  const c=cadj();
  try{
-  if(f==='home'&&a.price!=null){const dp=a.downPct??20,loan=a.price*(1-dp/100),r=6.3+c;return{loan,r,p:pmt(r,loan)};}
-  if(f==='refi'&&a.balance!=null){const loan=a.balance+(a.goal==='cash'?(a.cash??0):0),r=6.4+c+(a.goal==='cash'?0.375:0);return{loan,r,p:pmt(r,loan)};}
-  if((f==='dscr'||f==='str')&&a.value!=null){const loan=a.value*((a.ltv??75)/100),r=7.25+c+(f==='str'?0.25:0);return{loan,r,p:pmt(r,loan)};}
-  if(f==='bridge'&&a.buy!=null){const ltc={'0':0.75,'2':0.825,'5':0.85}[a.exp]??0.8;let loan=(a.buy+(a.rehab??0))*ltc;if(a.arv!=null)loan=Math.min(loan,a.arv*0.7);const r=10.25+c*.5;return{loan,r,p:loan*r/100/12};}
-  if(f==='heloc'&&a.value!=null&&a.balance!=null){const cap=a.appraisal==='skip'?0.80:0.85;const max=Math.max(0,a.value*cap-a.balance),loan=Math.min(a.amount??max,max);const citA={us:0,pr:0,visa:0.375,itin:1.25}[a.citizen]??0;const r=8.25+c*.7+(a.speed==='days'?0.5:(a.speed==='slow'?-0.5:0))+citA;const mo={line:0,f10:120,f15:180,f20:240}[a.term]??240;return{loan,r,p:mo===0?loan*r/100/12:pmt(r,loan,mo)};}
+  if(f==='home'&&a.price!=null){const dp=a.downPct??20,loan=a.price*(1-dp/100),r=5.3+c;return{loan,r,p:pmt(r,loan)};}
+  if(f==='refi'&&a.balance!=null){const loan=a.balance+(a.goal==='cash'?(a.cash??0):0),r=5.4+c+(a.goal==='cash'?0.375:0);return{loan,r,p:pmt(r,loan)};}
+  if((f==='dscr'||f==='str')&&a.value!=null){const loan=a.value*((a.ltv??75)/100),r=6.25+c+(f==='str'?0.25:0);return{loan,r,p:pmt(r,loan)};}
+  if(f==='bridge'&&a.buy!=null){const ltc={'0':0.75,'2':0.825,'5':0.85}[a.exp]??0.8;let loan=(a.buy+(a.rehab??0))*ltc;if(a.arv!=null)loan=Math.min(loan,a.arv*0.7);const r=9.25+c*.5;return{loan,r,p:loan*r/100/12};}
+  if(f==='heloc'&&a.value!=null&&a.balance!=null){const cap=a.appraisal==='skip'?0.80:0.85;const max=Math.max(0,a.value*cap-a.balance),loan=Math.min(a.amount??max,max);const citA={us:0,pr:0,visa:0.375,itin:1.25}[a.citizen]??0;const r=7.25+c*.7+(a.speed==='days'?0.5:(a.speed==='slow'?-0.5:0))+citA;const mo={line:0,f10:120,f15:180,f20:240}[a.term]??240;return{loan,r,p:mo===0?loan*r/100/12:pmt(r,loan,mo)};}
  }catch(e){}
  return null;
 }
@@ -434,14 +483,14 @@ function computeResults(){
   const loan=a.price*(1-a.downPct/100);
   const mk=(name,desc,lo,hi,extra,rec)=>({name,desc,lo:lo+c,hi:hi+c,rows:[['Loan',money(loan)],['Est. P&I / mo',money(pmt(lo+c,loan))+' – '+money(pmt(hi+c,loan))],...extra],rec});
   if(a.income==='bank'||a.income==='asset'){
-   out.cards=[mk(a.income==='bank'?'Bank statement 30-yr':'Asset qualifier 30-yr','Deposits qualify you — not tax returns',6.875,7.5,[['Down required','10%+']],true),
-              mk('Bank statement 40-yr IO','Lower payment, 10-yr interest-only',7.125,7.75,[['Structure','10-yr IO']]),
-              mk('Conventional (if returns work)','Worth testing your filed income',6.125,6.5,[['Down',a.downPct+'%']])];
+   out.cards=[mk(a.income==='bank'?'Bank statement 30-yr':'Asset qualifier 30-yr','Deposits qualify you — not tax returns',5.875,6.5,[['Down required','10%+']],true),
+              mk('Bank statement 40-yr IO','Lower payment, 10-yr interest-only',6.125,6.75,[['Structure','10-yr IO']]),
+              mk('Conventional (if returns work)','Worth testing your filed income',5.125,5.5,[['Down',a.downPct+'%']])];
    out.verdict='Your profile routes to <b>bank-statement lending</b> — deposits qualify you, not your Schedule C. Slightly higher rate, zero tax returns.';
   }else{
-   out.cards=[mk('Conventional 30-yr','The benchmark',6.125,6.5,[['Down',a.downPct+'%']],a.vet!=='yes'),
-              a.vet==='yes'?mk('VA 30-yr','0% down · no mortgage insurance',5.75,6.125,[['Down required','0%']],true):mk('FHA 30-yr','Easier credit · 3.5% down',5.875,6.25,[['Down required','3.5%'],['Note','MIP applies']]),
-              mk('15-yr fixed','Own it in half the time',5.5,5.875,[['Trade-off','Higher payment']])];
+   out.cards=[mk('Conventional 30-yr','The benchmark',5.125,5.5,[['Down',a.downPct+'%']],a.vet!=='yes'),
+              a.vet==='yes'?mk('VA 30-yr','0% down · no mortgage insurance',4.75,5.125,[['Down required','0%']],true):mk('FHA 30-yr','Easier credit · 3.5% down',4.875,5.25,[['Down required','3.5%'],['Note','MIP applies']]),
+              mk('15-yr fixed','Own it in half the time',4.5,4.875,[['Trade-off','Higher payment']])];
    out.verdict=a.vet==='yes'?'You\u2019re <b>VA eligible</b> — usually the strongest play on the board: zero down, no mortgage insurance.':a.downPct+'% down on '+money(a.price)+' sets your loan at <b>'+money(loan)+'</b>. '+(a.downPct>=20?'No mortgage insurance at this level.':'Under 20% down, budget for mortgage insurance until equity builds.');
   }
  }
@@ -449,9 +498,9 @@ function computeResults(){
  if(state.flowKey==='refi'){
   const cash=a.goal==='cash',loan=cash?a.balance+a.cash:a.balance,ltv=Math.round(loan/a.value*100),adj=cash?0.375:0;
   out.cards=[
-   {name:'30-yr '+(cash?'cash-out':'rate/term'),desc:cash?'Equity out, one clean payment':'Reset onto today\u2019s market',lo:6.25+c+adj,hi:6.625+c+adj,rows:[['New loan',money(loan)],['LTV',ltv+'%'],cash?['Cash to you',money(a.cash)]:['Balance',money(a.balance)],['Est. P&I / mo',money(pmt(6.25+c+adj,loan))+' – '+money(pmt(6.625+c+adj,loan))]],rec:true},
-   {name:'15-yr fixed',desc:'Attack the balance',lo:5.625+c+adj,hi:6+c+adj,rows:[['New loan',money(loan)],['Est. P&I / mo',money(pmt(5.625+c+adj,loan,180))+' – '+money(pmt(6+c+adj,loan,180))]]},
-   {name:'HELOC alternative',desc:cash?'Leave your first mortgage untouched':'Equity access without a refi',lo:8+c*.6,hi:9+c*.6,rows:[['Structure','2nd lien · variable'],['First mortgage','stays put']]}];
+   {name:'30-yr '+(cash?'cash-out':'rate/term'),desc:cash?'Equity out, one clean payment':'Reset onto today\u2019s market',lo:5.25+c+adj,hi:5.625+c+adj,rows:[['New loan',money(loan)],['LTV',ltv+'%'],cash?['Cash to you',money(a.cash)]:['Balance',money(a.balance)],['Est. P&I / mo',money(pmt(5.25+c+adj,loan))+' – '+money(pmt(5.625+c+adj,loan))]],rec:true},
+   {name:'15-yr fixed',desc:'Attack the balance',lo:4.625+c+adj,hi:5+c+adj,rows:[['New loan',money(loan)],['Est. P&I / mo',money(pmt(4.625+c+adj,loan,180))+' – '+money(pmt(5+c+adj,loan,180))]]},
+   {name:'HELOC alternative',desc:cash?'Leave your first mortgage untouched':'Equity access without a refi',lo:7+c*.6,hi:8+c*.6,rows:[['Structure','2nd lien · variable'],['First mortgage','stays put']]}];
   out.verdict=cash?('Pulling <b>'+money(a.cash)+'</b> lands you at <b>'+ltv+'% LTV</b>'+(ltv>80?' — over the 80% cap. Dial the cash back or the value up.':' — inside guidelines with room.')):('At '+money(a.balance)+' on a '+money(a.value)+' home you\u2019re at <b>'+ltv+'% LTV</b> — clean rate/term territory.');
  }
 
@@ -459,7 +508,7 @@ function computeResults(){
   const isStr=state.flowKey==='str';
   const income=isStr?(a.rev*(a.actuals==='yes'?1:0.8)/12):a.rent;
   const loan=a.value*a.ltv/100,strAdj=isStr?0.25:0,ltvAdj=a.ltv>=75?0.125:(a.ltv<=65?-0.125:0),coAdj=(a.pr==='refi')?0.25:0;
-  const base=7.0+c+strAdj+ltvAdj+coAdj;
+  const base=6.0+c+strAdj+ltvAdj+coAdj;
   const mkc=(name,desc,d,rec)=>{const lo=base+d,hi=base+0.5+d;const pitia=pmt(lo,loan)+a.value*0.011/12+(isStr?225:150);const dscr=income/pitia;
    return{name,desc,lo,hi,rows:[['Loan',money(loan)],['Est. P&I / mo',money(pmt(lo,loan))+' – '+money(pmt(hi,loan))],['DSCR','~'+dscr.toFixed(2)+'\u00d7']],rec,dscr};};
   out.cards=[mkc('5-yr prepay','Best rate — built to hold',0,true),mkc('3-yr prepay','Balanced flexibility',0.25),mkc('No prepay','Full freedom to exit',0.5)];
@@ -476,9 +525,9 @@ function computeResults(){
   const io=r=>money(loan*r/100/12);
   const mkb=(name,desc,lo,hi,rows,rec)=>({name,desc,lo:lo+expAdj+c*.5,hi:hi+expAdj+c*.5,rows,rec});
   out.cards=[
-   mkb('12-mo interest-only','The standard flip structure',9.75,10.5,[['Loan (capped)',money(loan)],['Monthly IO',io(9.75+expAdj+c*.5)+' – '+io(10.5+expAdj+c*.5)],['Max LTC',Math.round(ltc*100)+'%']],true),
-   mkb('18-mo interest-only','Room for a slower exit',10,10.75,[['Loan (capped)',money(loan)],['Monthly IO',io(10+expAdj+c*.5)+' – '+io(10.75+expAdj+c*.5)]]),
-   mkb('Bridge-to-DSCR','Auto-refi into a rental loan at exit',9.875,10.625,[['Exit','Built-in DSCR takeout'],['Best for','Holding, not selling']])];
+   mkb('12-mo interest-only','The standard flip structure',8.75,9.5,[['Loan (capped)',money(loan)],['Monthly IO',io(8.75+expAdj+c*.5)+' – '+io(9.5+expAdj+c*.5)],['Max LTC',Math.round(ltc*100)+'%']],true),
+   mkb('18-mo interest-only','Room for a slower exit',9,9.75,[['Loan (capped)',money(loan)],['Monthly IO',io(9+expAdj+c*.5)+' – '+io(9.75+expAdj+c*.5)]]),
+   mkb('Bridge-to-DSCR','Auto-refi into a rental loan at exit',8.875,9.625,[['Exit','Built-in DSCR takeout'],['Best for','Holding, not selling']])];
   const m=a.arv-a.buy-a.rehab;
   out.verdict='All-in basis <b>'+money(a.buy+a.rehab)+'</b> vs a <b>'+money(a.arv)+'</b> ARV = <b>'+money(m)+'</b> gross ('+Math.round(m/(a.buy+a.rehab)*100)+'%). '+(m/(a.buy+a.rehab)>=0.2?'Healthy spread.':'Thin once carry and closing costs bite — pressure-test that ARV.');
  }
@@ -496,11 +545,11 @@ function computeResults(){
     return{name,desc,lo,hi,rows:[['Amount',money(line)],['Est. / mo',pay(lo)+' \u2013 '+pay(hi)],['Close time',close],['Appraisal',appr],['Early-payoff fee',fee]],rec};};
   const wantFast=a.speed==='days',wantSlow=a.speed==='slow';
   out.cards=[
-   mk('Rapid close \u2014 '+termLabel,'Fintech-speed \u00b7 AVM valuation \u00b7 pay for the pace',8.5,'5\u20137 days'+trustNote,'None (AVM)',a.prepay==='none'?'None (priced in)':'If closed <3 yrs',wantFast),
-   mk('Balanced \u2014 '+termLabel,'Hybrid process \u00b7 desktop or drive-by value',8.0,'2\u20133 weeks'+trustNote,'Light','None',!wantFast&&!wantSlow),
-   mk('Best price \u2014 '+termLabel,'Full-process pricing \u00b7 patience pays',7.5,'4\u20136 weeks'+trustNote,'Full','None',wantSlow)];
+   mk('Rapid close \u2014 '+termLabel,'Fintech-speed \u00b7 AVM valuation \u00b7 pay for the pace',7.5,'5\u20137 days'+trustNote,'None (AVM)',a.prepay==='none'?'None (priced in)':'If closed <3 yrs',wantFast),
+   mk('Balanced \u2014 '+termLabel,'Hybrid process \u00b7 desktop or drive-by value',7.0,'2\u20133 weeks'+trustNote,'Light','None',!wantFast&&!wantSlow),
+   mk('Best price \u2014 '+termLabel,'Full-process pricing \u00b7 patience pays',6.5,'4\u20136 weeks'+trustNote,'Full','None',wantSlow)];
   const currPI=a.balance>0?pmt(6.5,a.balance):0;
-  const newPay=months===0?line*(8+c*.7+citAdj)/100/12:pmt(8+c*.7+citAdj,line,months);
+  const newPay=months===0?line*(7+c*.7+citAdj)/100/12:pmt(7+c*.7+citAdj,line,months);
   const dti=a.income?Math.round((a.debts+currPI+newPay)/a.income*100):null;
   let v='';
   v+=line<a.amount?('At '+Math.round(cltvCap*100)+'% CLTV'+(a.appraisal==='skip'?' (the AVM cap)':'')+' your ceiling is <b>'+money(max)+'</b> \u2014 under the '+money(a.amount)+' you wanted'+(a.appraisal==='skip'?'. A full appraisal often unlocks more.':'.')):('<b>'+money(line)+'</b> fits at '+cltv+'% CLTV \u2014 your first mortgage doesn\u2019t move.');
@@ -637,18 +686,10 @@ function renderResults(){
  const v=document.createElement('div');v.className='verdict';v.innerHTML=r.verdict;el.appendChild(v);
 
  const gate=document.createElement('div');gate.className='gate';
- gate.innerHTML=`<h3>Lock this scenario.</h3>
-  <p>We hold your run exactly as configured, then move straight into verification — soft credit, assets, income. Your ranges firm up in minutes, and a live human from the desk owns your file from there.</p>
-  <div class="fields">
-   <input type="text" id="gFirst" placeholder="First name" aria-label="First name">
-   <input type="text" id="gLast" placeholder="Last name" aria-label="Last name">
-   <input type="email" id="gEmail" class="full" placeholder="Email" aria-label="Email">
-   <input type="tel" id="gPhone" class="full" placeholder="Mobile" aria-label="Mobile">
-  </div>
-  <label class="consent"><input type="checkbox" id="tcpa">
-   By checking this box, I expressly consent to receive calls, texts and emails about my inquiry from LumoLend and its loan officers at the contact info provided \u2014 including via automated technology and prerecorded messages, and even if my number appears on a federal, state or company Do-Not-Call list. Consent isn\u2019t required to obtain a loan. Msg &amp; data rates may apply.</label>
-  <button class="cta" style="margin-top:0" onclick="saveRun()">LOCK & START PRE-APPROVAL \u2192</button>
-  <div class="saved" id="saved">\u25B8 SCENARIO LOCKED. Spinning up verification\u2026</div>`;
+ gate.innerHTML=`<h3>Lock this scenario for review.</h3>
+  <p>Confirm your details — about 60 seconds, no documents — and this exact run goes to a licensed loan officer for review. Pricing gets firmed against the live lender panel, and nothing gets re-asked.</p>
+  <button class="cta" style="margin-top:0" onclick="openLock()">SUBMIT MY SCENARIO FOR REVIEW →</button>
+  <div class="saved" id="saved">▸ SCENARIO SUBMITTED. Opening your review…</div>`;
  el.appendChild(gate);
 
  const bk=document.createElement('button');bk.className='ghost';bk.textContent='\u2190 ADJUST MY RUN';bk.onclick=goBack;
@@ -656,24 +697,119 @@ function renderResults(){
  stage.appendChild(el);
  window.scrollTo({top:0,behavior:'instant'});
 }
-function saveRun(){
+/* ---------- lock & submit for review ---------- */
+const EMAIL_TYPOS={'gmial.com':'gmail.com','gamil.com':'gmail.com','gmal.com':'gmail.com','gmaill.com':'gmail.com','gnail.com':'gmail.com','hotmial.com':'hotmail.com','hotmal.com':'hotmail.com','hotmai.com':'hotmail.com','yaho.com':'yahoo.com','yahooo.com':'yahoo.com','outlok.com':'outlook.com','outloook.com':'outlook.com','iclod.com':'icloud.com','icoud.com':'icloud.com','icloud.co':'icloud.com'};
+function checkEmail(v){
+ if(!/^[^\s@]+@[^\s@]+\.[a-z]{2,}$/i.test(v))return{ok:false,msg:'ENTER A VALID EMAIL.'};
+ const dom=v.split('@')[1].toLowerCase();
+ if(EMAIL_TYPOS[dom])return{ok:false,suggest:v.split('@')[0]+'@'+EMAIL_TYPOS[dom]};
+ return{ok:true};
+}
+function phoneDigits(v){return v.replace(/\D/g,'').replace(/^1(?=\d{10}$)/,'').slice(0,10);}
+function fmtPhone(d){
+ if(d.length<=3)return d;
+ if(d.length<=6)return '('+d.slice(0,3)+') '+d.slice(3);
+ return '('+d.slice(0,3)+') '+d.slice(3,6)+'-'+d.slice(6,10);
+}
+function checkPhone(v){
+ const d=phoneDigits(v);
+ if(d.length!==10)return{ok:false,msg:'ENTER A 10-DIGIT US MOBILE.'};
+ if(/^(\d)\1{9}$/.test(d)||d[0]==='0'||d[0]==='1')return{ok:false,msg:'THAT DOESN’T LOOK LIKE A REAL NUMBER.'};
+ return{ok:true,d};
+}
+let enticed=false;
+function isPurchase(){return state.flowKey==='home'||((state.flowKey==='dscr'||state.flowKey==='str')&&state.answers.pr==='purchase');}
+function openLock(){
+ const e=liveEstimate(),s=$('lockStats');
+ if(e&&isFinite(e.loan)&&e.loan>0){
+  s.style.display='flex';
+  s.innerHTML=`<div class="mstat"><div class="l">LOAN</div><div class="n">${moneyK(e.loan)}</div></div>
+   <div class="mstat"><div class="l">RATE EST</div><div class="n">${pct(e.r)}±</div></div>
+   <div class="mstat"><div class="l">EST / MO</div><div class="n">${money(e.p)}</div></div>`;
+ }else s.style.display='none';
+ if(state.answers.name&&!$('lFirst').value)$('lFirst').value=state.answers.name;
+ $('lockback').classList.add('show');
+ setTimeout(()=>$('lFirst').focus(),60);
+}
+function closeLock(byUser){
+ $('lockback').classList.remove('show');
+ if(byUser&&!runSaved&&!enticed){enticed=true;openEntice();}
+}
+function openEntice(){
+ const e=liveEstimate(),r=computeResults(),pick=r.cards.find(c=>c.rec)||r.cards[0];
+ const exp=new Date(Date.now()+60*86400000).toLocaleDateString('en-US',{month:'long',day:'numeric',year:'numeric'});
+ let inner;
+ if(isPurchase()){
+  inner=`<h3>Your letter is <b>one step away.</b></h3>
+   <p>Letters aren’t auto-generated here — a licensed loan officer reviews your scenario first, then issues the real thing. Here’s what yours looks like:</p>
+   <div class="spaper">
+    <h4>CONDITIONAL PRE-APPROVAL</h4>
+    <div class="samt">${e?money(e.loan):'—'}</div>
+    <div class="srows">
+     <div><span>Program</span><span class="blurred">${pick?pick.name:''}</span></div>
+     <div><span>Rate band</span><span class="blurred">${pick?pct(pick.lo)+' – '+pct(pick.hi):''}</span></div>
+     <div><span>Prepared for</span><span class="blurred">${state.answers.name||'You'}</span></div>
+     <div><span>Valid through</span><span>${exp}</span></div>
+    </div>
+    <div class="smeta">Issued only after review by a licensed loan officer. NMLS #2732105 · Equal Housing Lender.</div>
+   </div>
+   <button class="cta" style="width:100%;justify-content:center" onclick="enticeUnlock()">SUBMIT MY SCENARIO FOR REVIEW →</button>
+   <div class="mnote">60 seconds · no documents · no hard pull. Your reviewed scenario comes back with the real numbers.</div>`;
+ }else{
+  inner=`<h3>Don’t leave your <b>terms on the table.</b></h3>
+   <p>These are the structures your run priced. A reviewed scenario firms them into a real term sheet:</p>
+   <div class="spaper">
+    <h4>INDICATIVE TERM SHEET</h4>
+    <div class="srows">
+     ${r.cards.map(c=>`<div><span>${c.name}</span><span><b>${pct(c.lo)} – ${pct(c.hi)}</b></span></div>`).join('')}
+     <div><span>Est. payment</span><span class="blurred">${e?money(e.p)+' / mo':''}</span></div>
+     <div><span>Prepared for</span><span class="blurred">${state.answers.name||'You'}</span></div>
+    </div>
+    <div class="smeta">Indicative ranges, not an offer to lend. Firm terms issued after loan-officer review. NMLS #2732105 · Equal Housing Lender.</div>
+   </div>
+   <button class="cta" style="width:100%;justify-content:center" onclick="enticeUnlock()">SUBMIT MY SCENARIO FOR REVIEW →</button>
+   <div class="mnote">60 seconds · no documents · no hard pull. A human firms these numbers against the live panel.</div>`;
+ }
+ $('entBody').innerHTML=`<button class="mx" onclick="closeEntice()" aria-label="Close">&times;</button>`+inner;
+ $('entback').classList.add('show');
+}
+function closeEntice(){$('entback').classList.remove('show');}
+function enticeUnlock(){closeEntice();openLock();}
+function fieldErr(el,hintId,msg){el.classList.add('bad');el.classList.remove('ok');if(hintId){const h=$(hintId);h.textContent=msg||'';h.className='fhint';}el.focus();}
+function submitScenario(){
+ const first=$('lFirst').value.trim(),last=$('lLast').value.trim(),email=$('lEmail').value.trim();
+ const street=$('lStreet').value.trim(),unit=$('lUnit').value.trim(),city=$('lCity').value.trim(),st=$('lState').value.trim(),zip=$('lZip').value.trim();
+ const nameOk=v=>/^[a-zÀ-ɏ' -]{2,}$/i.test(v);
+ if(!nameOk(first))return fieldErr($('lFirst'));
+ if(!nameOk(last))return fieldErr($('lLast'));
+ const ec=checkEmail(email);
+ if(!ec.ok){
+  if(ec.suggest){const h=$('emailHint');h.innerHTML='DID YOU MEAN <b id="emailFix">'+ec.suggest+'</b>?';h.className='fhint';
+   $('emailFix').onclick=()=>{$('lEmail').value=ec.suggest;h.textContent='';$('lEmail').classList.remove('bad');};
+   $('lEmail').classList.add('bad');$('lEmail').focus();return;}
+  return fieldErr($('lEmail'),'emailHint',ec.msg);
+ }
+ const pc=checkPhone($('lPhone').value);
+ if(!pc.ok)return fieldErr($('lPhone'),'phoneHint',pc.msg);
+ if(street.length<4)return fieldErr($('lStreet'));
+ if(!city)return fieldErr($('lCity'));
+ if(!/^[a-z]{2}$/i.test(st))return fieldErr($('lState'));
+ if(!/^\d{5}(-\d{4})?$/.test(zip))return fieldErr($('lZip'));
  if(!$('tcpa').checked){$('tcpa').focus();return;}
- const first=$('gFirst').value.trim(),email=$('gEmail').value.trim();
- if(!first){$('gFirst').focus();$('gFirst').style.borderColor='#FF6B6B';return;}
- if(!/.+@.+\..+/.test(email)){$('gEmail').focus();$('gEmail').style.borderColor='#FF6B6B';return;}
  const e=liveEstimate(),r=computeResults();
  const pick=r.cards.find(c=>c.rec)||r.cards[0];
  const file={
   id:'LL-'+Date.now().toString(36).toUpperCase().slice(-6),
   created:new Date().toISOString(),
-  first,last:$('gLast').value.trim(),email,phone:$('gPhone').value.trim(),
+  first,last,email,phone:fmtPhone(pc.d),
+  address:{street,unit,city,state:st.toUpperCase(),zip},
   flowKey:state.flowKey,answers:state.answers,
   pricing:{loan:e?e.loan:0,rate:e?e.r:0,payment:e?e.p:0,
    pick:pick?{name:pick.name,lo:pick.lo,hi:pick.hi}:null,
    cards:r.cards.map(c=>({name:c.name,desc:c.desc,lo:c.lo,hi:c.hi,rec:!!c.rec})),
    verdict:r.verdict},
-  verifications:{credit:null,assets:null,income:null},
-  status:'priced'
+  verifications:{identity:null,address:null,scenario:null},
+  status:'submitted'
  };
  try{
   localStorage.setItem('lumolend_file',JSON.stringify(file));
@@ -682,16 +818,32 @@ function saveRun(){
  }catch(_){}
  try{window.lumoSaveLead&&lumoSaveLead(file);}catch(_){}
  runSaved=true;
- $('saved').style.display='block';
+ $('lockback').classList.remove('show');
+ const sv=$('saved');if(sv)sv.style.display='block';
  setTimeout(()=>{
   location.href='preapprove.html#f='+encodeURIComponent(btoa(unescape(encodeURIComponent(JSON.stringify(file)))));
  },900);
 }
+$('lPhone').addEventListener('input',()=>{const el=$('lPhone');el.value=fmtPhone(phoneDigits(el.value));});
+$('lEmail').addEventListener('blur',()=>{
+ const el=$('lEmail'),v=el.value.trim(),h=$('emailHint');if(!v)return;
+ const c=checkEmail(v);
+ if(c.ok){el.classList.add('ok');el.classList.remove('bad');h.textContent='✓ EMAIL CHECKS OUT';h.className='fhint okk';}
+ else if(c.suggest){h.innerHTML='DID YOU MEAN <b id="emailFix">'+c.suggest+'</b>?';h.className='fhint';
+  $('emailFix').onclick=()=>{el.value=c.suggest;h.textContent='';el.classList.remove('bad');};el.classList.add('bad');}
+ else{el.classList.add('bad');h.textContent=c.msg;h.className='fhint';}
+});
+$('lPhone').addEventListener('blur',()=>{
+ const el=$('lPhone'),h=$('phoneHint');if(!el.value)return;
+ const c=checkPhone(el.value);
+ if(c.ok){el.classList.add('ok');el.classList.remove('bad');h.textContent='✓ VALID US MOBILE';h.className='fhint okk';}
+ else{el.classList.add('bad');h.textContent=c.msg;h.className='fhint';}
+});
 
 /* ---------- exit-intent + save-run capture ---------- */
 let exitShown=false,runSaved=false;
 document.addEventListener('mouseout',e=>{if(!e.relatedTarget&&e.clientY<=8)maybeExit();});
-document.addEventListener('keydown',e=>{if(e.key==='Escape')closeSave();});
+document.addEventListener('keydown',e=>{if(e.key!=='Escape')return;closeSave();if($('lockback').classList.contains('show'))closeLock(true);else if($('entback').classList.contains('show'))closeEntice();});
 function maybeExit(){
  if(exitShown||runSaved)return;
  if(!state.flowKey||Object.keys(state.answers).length<3)return;

@@ -217,8 +217,8 @@ begin
     '</b><br>Indicative band: <b>' || coalesce(new.rate_lo::text,'—') || '% – ' || coalesce(new.rate_hi::text,'—') || '%</b></p>' ||
     coalesce('<p>Your loan officer is <b>' || v_mlo.name || '</b> (NMLS #' || coalesce(v_mlo.nmls,'—') ||
     '), copied on this email. Your full run transfers to them exactly as you built it — nothing gets re-asked.</p>', '') ||
-    '<p>Next: verify in minutes to firm your pricing before the first call.</p>' ||
-    '<p><a href="https://lumolend.com/preapprove.html" style="background:#00E67A;color:#04140B;padding:12px 24px;text-decoration:none;border-radius:4px;font-weight:bold">CONTINUE TO PRE-APPROVAL &rarr;</a></p>' ||
+    '<p>Next: confirm your details — it takes a minute, and your scenario moves to the front of the review queue.</p>' ||
+    '<p><a href="https://lumolend.com/preapprove.html" style="background:#00E67A;color:#04140B;padding:12px 24px;text-decoration:none;border-radius:4px;font-weight:bold">CONTINUE MY REVIEW &rarr;</a></p>' ||
     '<p style="color:#777;font-size:12px">Indicative ranges, not an offer or commitment to lend. LumoLend · NMLS #2732105 · Equal Housing Lender</p></div>',
     'lead_locked',
     v_mlo.email

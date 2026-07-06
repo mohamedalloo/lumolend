@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>LumoLend — Pre-Approval Engine</title>
+<title>LumoLend — Scenario Review</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;700&family=Inter:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="assets/theme.css">
@@ -13,7 +13,7 @@
 .cols{display:grid;grid-template-columns:1fr 340px;gap:26px;align-items:start;margin-top:34px}
 @media(max-width:900px){.cols{grid-template-columns:1fr}}
 
-/* ================= VERIFICATION MODULES ================= */
+/* ================= CONFIRMATION MODULES ================= */
 .vmod{background:var(--panel);border:1px solid var(--edge);border-radius:8px;padding:22px 24px;margin-bottom:14px;position:relative;overflow:hidden;transition:border-color .3s}
 .vmod::before{content:'';position:absolute;left:0;top:0;bottom:0;width:2px;background:var(--faint);transition:.3s}
 .vmod.running::before{background:var(--cyan);box-shadow:0 0 12px var(--cyan)}
@@ -33,11 +33,11 @@
 .vresult{display:none;margin-top:16px;border-top:1px solid var(--edge);padding-top:14px;gap:26px}
 .vresult.show{display:flex;flex-wrap:wrap;animation:warpIn .4s}
 .vr .l{font-family:var(--disp);font-size:9px;letter-spacing:.22em;color:var(--mut);margin-bottom:3px}
-.vr .n{font-family:var(--disp);font-size:19px;color:var(--green);text-shadow:0 0 14px var(--green-glow);font-variant-numeric:tabular-nums}
+.vr .n{font-family:var(--disp);font-size:16px;color:var(--green);text-shadow:0 0 14px var(--green-glow);font-variant-numeric:tabular-nums;word-break:break-word}
 .vcheck{width:26px;height:26px;border-radius:50%;border:1.5px solid var(--green);color:var(--green);display:none;align-items:center;justify-content:center;font-size:13px;box-shadow:0 0 16px var(--green-glow);animation:pop .4s cubic-bezier(.3,1.7,.5,1)}
 .vmod.done .vcheck{display:flex}.vmod.done .vbtn{display:none}
 
-/* ================= CERTAINTY RAIL ================= */
+/* ================= READINESS RAIL ================= */
 .rail{position:sticky;top:22px}
 .meterbox{background:linear-gradient(180deg,var(--panel-2),var(--panel));border:1px solid var(--cyan-dim);border-radius:10px;padding:26px 24px;position:relative;overflow:hidden}
 .meterbox::before{content:'';position:absolute;inset:-40%;background:conic-gradient(from 0deg,transparent 72%,var(--cyan-ghost) 86%,transparent 100%);animation:spin 10s linear infinite;pointer-events:none}
@@ -75,54 +75,26 @@
 .human .ht{font-size:11px;color:var(--mut);line-height:1.5;margin-top:2px}
 .human .ht b{color:var(--green);font-weight:500}
 
-/* ================= LETTER ================= */
-.lettersec{margin-top:44px;display:none}
-.lettersec.show{display:block;animation:warpIn .5s}
-.powerbox{background:var(--panel);border:1px solid var(--edge);border-radius:8px;padding:24px 26px;max-width:560px;margin-bottom:22px}
-.powerbox .bignum{font-family:var(--disp);font-weight:300;font-size:clamp(34px,5vw,48px);letter-spacing:-.02em;line-height:1;font-variant-numeric:tabular-nums;margin-bottom:4px}
-.powerbox .ctx{font-family:var(--disp);font-size:12px;letter-spacing:.06em;color:var(--cyan);margin-bottom:22px;min-height:15px}
-input[type=range]{width:100%;appearance:none;-webkit-appearance:none;height:3px;border-radius:2px;background:linear-gradient(90deg,var(--green) var(--fill,100%),var(--edge) var(--fill,100%));outline:none}
-input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:22px;height:22px;border-radius:50%;background:var(--void);border:2px solid var(--green);box-shadow:0 0 14px var(--green-glow);cursor:grab}
-.range-l{display:flex;justify-content:space-between;font-family:var(--disp);font-size:10px;letter-spacing:.08em;color:var(--faint);margin-top:10px}
-.powernote{font-size:11.5px;color:var(--mut);line-height:1.6;margin-top:14px;max-width:52ch}
-
-/* the paper */
-.paper{background:#F4F1EA;color:#1A2129;border-radius:6px;max-width:660px;padding:clamp(28px,4vw,48px);font-family:var(--body);box-shadow:0 24px 80px rgba(0,0,0,.5),0 0 0 1px rgba(255,255,255,.06);position:relative}
-.paper .phead{display:flex;justify-content:space-between;align-items:flex-start;border-bottom:2px solid #1A2129;padding-bottom:16px;margin-bottom:22px}
-.paper .pmark{font-family:var(--disp);font-weight:700;font-size:15px;letter-spacing:.28em}
-.paper .pmark em{font-style:normal;color:#0E7D66}
-.paper .pmeta{text-align:right;font-size:10.5px;color:#5A6570;line-height:1.7;font-family:var(--mono)}
-.paper h2{font-family:var(--disp);font-weight:500;font-size:20px;margin-bottom:16px;letter-spacing:.02em}
-.paper p{font-size:13px;line-height:1.75;color:#2A343E;margin-bottom:13px}
-.paper .amt{font-family:var(--disp);font-weight:500;font-size:30px;letter-spacing:-.01em;color:#0E7D66;margin:6px 0 14px}
-.paper table{width:100%;border-collapse:collapse;margin:16px 0 20px;font-size:12px}
-.paper td{padding:7px 0;border-bottom:1px solid #D9D4C8}
-.paper td:first-child{color:#5A6570;width:46%}
-.paper td:last-child{font-family:var(--mono);font-size:11.5px}
-.paper .conds{font-size:11px;color:#5A6570;line-height:1.7;margin:14px 0 20px}
-.paper .sig{display:flex;justify-content:space-between;align-items:flex-end;margin-top:26px;padding-top:18px;border-top:1px solid #D9D4C8}
-.paper .sname{font-family:'Space Grotesk';font-size:19px;font-style:italic;margin-bottom:3px}
-.paper .stitle{font-size:10.5px;color:#5A6570;line-height:1.6}
-.paper .seal{width:64px;height:64px;border:2px solid #0E7D66;border-radius:50%;display:flex;align-items:center;justify-content:center;text-align:center;font-family:var(--disp);font-size:7px;letter-spacing:.14em;color:#0E7D66;line-height:1.5;transform:rotate(-8deg)}
-.letteractions{display:flex;gap:12px;margin-top:22px;flex-wrap:wrap}
+/* ================= IN REVIEW ================= */
+.reviewsec{margin-top:44px;display:none}
+.reviewsec.show{display:block;animation:warpIn .5s}
+.reviewbox{max-width:660px;background:linear-gradient(180deg,var(--panel-2),var(--panel));border:1px solid var(--cyan-dim);border-radius:12px;padding:30px clamp(22px,4vw,36px);position:relative;overflow:hidden}
+.reviewbox::before{content:'';position:absolute;inset:-40%;background:conic-gradient(from 0deg,transparent 72%,var(--green-ghost) 86%,transparent 100%);animation:spin 9s linear infinite;pointer-events:none}
+@media(prefers-reduced-motion:reduce){.reviewbox::before{animation:none}}
+.reviewbox>*{position:relative}
+.reviewbox h3{font-family:var(--disp);font-weight:500;font-size:22px;margin-bottom:6px}
+.reviewbox p{font-size:13.5px;color:var(--mut);line-height:1.6;max-width:56ch}
+.nextlist{margin-top:18px;border-top:1px solid var(--edge)}
+.nextstep{display:grid;grid-template-columns:30px 1fr;gap:12px;padding:12px 0;border-bottom:1px solid var(--edge);align-items:baseline}
+.nextstep:last-child{border-bottom:none}
+.nextstep .nn{font-family:var(--mono);font-size:11px;color:var(--cyan)}
+.nextstep .nl{font-size:13px;line-height:1.5}
+.nextstep .nl small{display:block;color:var(--mut);font-size:11.5px;margin-top:2px;line-height:1.5}
 
 /* empty state */
 .empty{text-align:center;padding:12vh 20px;position:relative;z-index:2}
 .empty .q{margin-bottom:14px}
 .empty .sub{margin:0 auto 30px}
-
-/* ================= FILE ROUTED ================= */
-.losec{margin-top:46px}
-.lolocked{max-width:660px;background:var(--panel);border:1px dashed var(--edge);border-radius:12px;padding:26px 30px;display:flex;gap:18px;align-items:center}
-.lolocked .q2{font-family:var(--disp);font-size:17px;margin-bottom:4px}
-.lolocked p{font-size:12.5px;color:var(--mut);line-height:1.55;max-width:44ch}
-.lock-ico{width:52px;height:52px;border-radius:50%;border:1.5px solid var(--faint);display:flex;align-items:center;justify-content:center;font-size:20px;color:var(--faint);flex-shrink:0}
-@media print{
-  body{background:#fff}
-  body>*{display:none!important}
-  #printzone{display:block!important;position:absolute;top:0;left:0;width:100%}
-  .paper{box-shadow:none;border-radius:0;max-width:100%}
-}
 </style>
 </head>
 <body>
@@ -132,14 +104,12 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:22px;heigh
 <header class="bar">
   <a class="mark" href="index.html">
     <div class="glyph"><i></i><i></i><i></i></div>
-    <div class="wordmark">LUMO<em>LEND</em><span class="mode">/ PRE-APPROVAL</span></div>
+    <div class="wordmark">LUMO<em>LEND</em><span class="mode">/ REVIEW</span></div>
   </a>
   <span class="chip" id="fileChip">FILE <b>—</b></span>
 </header>
 
 <main class="wrap" id="main"></main>
-
-<div id="printzone" style="display:none"></div>
 
 <section class="truststrip" aria-label="Lender network">
   <div class="tlabel">EVERY SCENARIO SHOPS A LIVE LENDER PANEL</div>
@@ -148,7 +118,7 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:22px;heigh
 </section>
 
 <footer class="legal">
-  LumoLend prototype. Verifications are simulated for demonstration. Pre-approval letters are illustrative and conditional; not a commitment to lend. NMLS #2732105 · Equal Housing Lender.
+  LumoLend prototype. Every scenario is reviewed by a licensed loan officer &mdash; nothing is auto-approved, and pre-approval letters are issued only after review. Rates are indicative illustrative ranges, not an offer or commitment to lend. NMLS #2732105 &middot; Equal Housing Lender.
 </footer>
 
 <script src="assets/config.js"></script>
@@ -157,62 +127,55 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:22px;heigh
 <script>
 'use strict';
 let file=loadLoanFile();
+/* migrate files saved before the review model */
+if(file&&file.verifications&&!('identity' in file.verifications)){
+ file.verifications={identity:null,address:null,scenario:null};
+ if(file.status==='verified'||file.status==='preapproved')file.status='submitted';
+}
 
 /* ---------------- empty state ---------------- */
 function renderEmpty(){
  $('main').innerHTML=`<div class="empty step">
-   <div class="eyebrow" style="justify-content:center">NO ACTIVE RUN</div>
-   <h1 class="q">Nothing to verify — yet.</h1>
-   <p class="sub">Price a scenario first and lock it in. The run lands here for verification and pre-approval.</p>
+   <div class="eyebrow" style="justify-content:center">NO ACTIVE SCENARIO</div>
+   <h1 class="q">Nothing to review — yet.</h1>
+   <p class="sub">Price a scenario first and submit it. The run lands here for confirmation and loan-officer review.</p>
    <a class="cta" href="index.html">START A RUN &rarr;</a>&nbsp;&nbsp;
    <button class="cta cyan" onclick="loadDemo()">LOAD A DEMO FILE</button>
  </div>`;
 }
 function loadDemo(){
  file=demoFiles()[0];
- file.id='LL-DEMO00';file.verifications={credit:null,assets:null,income:null};file.status='priced';
+ file.id='LL-DEMO00';file.verifications={identity:null,address:null,scenario:null};file.status='submitted';
  saveLoanFile(file);renderApp();
 }
 
-/* ---------------- verification specs ---------------- */
+/* ---------------- confirmation specs ---------------- */
+function fmtAddress(f){
+ if(!f.address||!f.address.street)return null;
+ const a=f.address;
+ return{line1:a.street+(a.unit?' #'+a.unit:''),line2:(a.city||'')+(a.state?', '+a.state:'')+(a.zip?' '+a.zip:'')};
+}
 function vSpecs(){
- const a=file.answers,fk=file.flowKey;
- const score=CREDIT_MID[a.credit]??712;
- const dp=fk==='home'?a.price*(a.downPct??20)/100:(fk==='bridge'?(a.buy+a.rehab)*0.2:file.pricing.loan*0.12);
- const need=Math.round((dp+file.pricing.loan*0.02)/1000)*1000;
- const verified=Math.round(need*1.32/1000)*1000;
- let incTitle='Income',incSub='',incLog=[],incResult=[];
- if(fk==='dscr'||fk==='str'){
-   incTitle='Property cash flow';
-   incSub='The property qualifies — not your paystub. We verify the rent story instead.';
-   incLog=['&gt; pulling comparable rents …','&gt; '+(fk==='str'?'AirDNA market projection cross-check …':'rent roll + lease audit …'),'<span class="cy">&gt; coverage model re-run</span>','<span class="ok">&#10003; cash flow verified</span>'];
-   incResult=[['METHOD',fk==='str'?'STR REVENUE':'MARKET RENT'],['COVERAGE','CONFIRMED']];
- }else if(a.income==='bank'){
-   incSub='12 months of deposits, read directly. No tax returns.';
-   incLog=['&gt; secure bank link established …','&gt; scanning 12-mo deposit history …','&gt; filtering transfers &amp; one-offs …','<span class="cy">&gt; qualifying income computed</span>','<span class="ok">&#10003; deposit income verified</span>'];
-   incResult=[['METHOD','BANK STATEMENT'],['STATUS','QUALIFIED']];
- }else if(fk==='bridge'){
-   incTitle='Track record';
-   incSub='For bridge capital, your completed projects are the income story.';
-   incLog=['&gt; county records sweep …','&gt; matching completed exits …','<span class="ok">&#10003; operator history confirmed</span>'];
-   incResult=[['METHOD','EXPERIENCE'],['TIER',(a.exp==='5'?'OPERATOR':'STANDARD')]];
- }else{
-   incSub='Instant employment + income check. No pay stubs to dig up.';
-   incLog=['&gt; instant VOE request sent …','&gt; employer record matched …','<span class="cy">&gt; income stream confirmed</span>','<span class="ok">&#10003; income verified</span>'];
-   incResult=[['METHOD','INSTANT VOE'],['STATUS','VERIFIED']];
- }
+ const a=file.answers,pick=file.pricing.pick||{};
+ const fullName=((file.first||'')+' '+(file.last||'')).trim()||'—';
+ const addr=fmtAddress(file);
+ const scenRows=[['LOAN',moneyK(file.pricing.loan)],['PROGRAM',pick.name||'—']];
+ if(a.incomeAmt)scenRows.push(['INCOME',money(a.incomeAmt)+'/MO']);
+ if(a.debts!=null)scenRows.push(['DEBTS',money(a.debts)+'/MO']);
+ scenRows.push(['CREDIT (STATED)',CREDIT_LABELS[a.credit]||'—']);
  return [
-  {key:'credit',title:'Credit — soft pull',sub:'Tri-merge soft inquiry. Zero impact on your score, ever.',btn:'RUN SOFT PULL',
-   log:['&gt; tri-merge soft inquiry …','&gt; Experian · Equifax · TransUnion responding …','<span class="cy">&gt; mid-score computed</span>','<span class="ok">&#10003; credit locked into pricing</span>'],
-   result:()=>[['MID SCORE',String(score)],['IMPACT','NONE (SOFT)']],
-   data:()=>({score,at:new Date().toISOString()})},
-  {key:'assets',title:'Assets & reserves',sub:'Read-only bank link. We confirm funds to close — nothing moves.',btn:'LINK ACCOUNTS',
-   log:['&gt; read-only connection opened …','&gt; balances snapshotted across accounts …','&gt; seasoning check (60-day) …','<span class="ok">&#10003; funds to close confirmed</span>'],
-   result:()=>[['VERIFIED',moneyK(verified)],['NEEDED','~'+moneyK(need)]],
-   data:()=>({verified,accounts:2,at:new Date().toISOString()})},
-  {key:'income',title:incTitle,sub:incSub,btn:'VERIFY',log:incLog,
-   result:()=>incResult,
-   data:()=>({method:incResult[0][1],at:new Date().toISOString()})}
+  {key:'identity',title:'Identity & contact',sub:'Exactly as it reads on your ID — this is the name that goes on your file.',btn:'CONFIRM',
+   log:['&gt; legal name on file: <span class="cy">'+fullName+'</span>','&gt; mailbox check: '+(file.email||'—')+' …','&gt; line check: '+(file.phone||'—')+' …','<span class="cy">&gt; contact record compiled</span>','<span class="ok">&#10003; identity locked to file</span>'],
+   result:()=>[['LEGAL NAME',fullName],['EMAIL',file.email||'—'],['PHONE',file.phone||'—']],
+   data:()=>({at:new Date().toISOString()})},
+  {key:'address',title:'Property address',sub:'Street, unit and ZIP — condos included. This anchors title, taxes and comps.',btn:'CONFIRM',
+   log:['&gt; normalizing address …','&gt; unit / condo check …','&gt; matching county records …','<span class="ok">&#10003; address locked</span>'],
+   result:()=>addr?[['ADDRESS',addr.line1],['CITY / STATE / ZIP',addr.line2]]:[['ADDRESS','ON FILE AT LOCK']],
+   data:()=>({at:new Date().toISOString()})},
+  {key:'scenario',title:'Scenario snapshot',sub:'Your exact run — every answer, verbatim. This is what your loan officer reviews.',btn:'CONFIRM',
+   log:['&gt; compiling your answers …','&gt; re-running pricing at your inputs …','<span class="cy">&gt; queueing for loan-officer review</span>','<span class="ok">&#10003; scenario queued</span>'],
+   result:()=>scenRows,
+   data:()=>({at:new Date().toISOString()})}
  ];
 }
 
@@ -223,20 +186,20 @@ function renderApp(){
  const pick=file.pricing.pick;
  $('main').innerHTML=`
  <div class="step">
-  <div class="eyebrow">VERIFICATION RUNWAY</div>
-  <h1 class="q">${nm?nm+', let’s turn pricing into proof.':'Let’s turn pricing into proof.'}</h1>
-  <p class="sub">Your run priced at <b style="color:var(--txt)">${pct(pick.lo)} – ${pct(pick.hi)}</b> on ${pick.name}. Every verification below removes uncertainty — watch the band tighten. All three, and your pre-approval letter generates on the spot.</p>
+  <div class="eyebrow">SCENARIO REVIEW RUNWAY</div>
+  <h1 class="q">${nm?nm+', let’s get this file review-ready.':'Let’s get this file review-ready.'}</h1>
+  <p class="sub">Your run priced at <b style="color:var(--txt)">${pct(pick.lo)} – ${pct(pick.hi)}</b> on ${pick.name}. Confirm each block below — your band tightens as the file firms up. All three, and your scenario moves to the front of the review queue.</p>
   <div class="cols">
     <div id="mods"></div>
     <div class="rail">
       <div class="meterbox">
-        <div class="mlabel">FILE CERTAINTY</div>
+        <div class="mlabel">REVIEW READINESS</div>
         <div class="mpct"><span id="mp">35</span><small>%</small></div>
-        <div class="mstatus" id="ms">PRICED — UNVERIFIED</div>
+        <div class="mstatus" id="ms">SUBMITTED — UNCONFIRMED</div>
         <div class="segs">
-          <div class="seg base"></div><div class="seg" id="segC"></div><div class="seg" id="segA"></div><div class="seg" id="segI"></div>
+          <div class="seg base"></div><div class="seg" id="segI"></div><div class="seg" id="segA"></div><div class="seg" id="segS"></div>
         </div>
-        <div class="seglbl"><span>PRICED</span><span>CREDIT</span><span>ASSETS</span><span>INCOME</span></div>
+        <div class="seglbl"><span>SUBMITTED</span><span>IDENTITY</span><span>ADDRESS</span><span>SCENARIO</span></div>
         <div class="bandbox">
           <div class="l">YOUR RATE BAND — LIVE</div>
           <div class="track"><div class="rail-line"></div><div class="band" id="band"></div></div>
@@ -248,12 +211,12 @@ function renderApp(){
         <div class="avatar">&#9993;</div>
         <div>
           <div class="hn">Loan officer: assigned</div>
-          <div class="ht">Your intro is in your inbox<br><b>&#9679; verification firms pricing before the first call</b></div>
+          <div class="ht">Your intro is in your inbox<br><b>&#9679; confirmations firm pricing before the first call</b></div>
         </div>
       </div>
     </div>
   </div>
-  <div class="lettersec" id="lettersec"></div>
+  <div class="reviewsec" id="reviewsec"></div>
  </div>`;
  const mods=$('mods');
  vSpecs().forEach(sp=>{
@@ -266,7 +229,7 @@ function renderApp(){
   if(file.verifications[sp.key])showResult(sp,false);
  });
  syncRail(false);
- if(certainty(file)===100)showLetterSection();
+ if(certainty(file)===100)showReviewSection();
 }
 
 function runV(key){
@@ -280,12 +243,15 @@ function runV(key){
  });
  setTimeout(()=>{
   file.verifications[key]=sp.data();
-  if(file.verifications.credit&&file.verifications.assets&&file.verifications.income&&file.status==='priced')file.status='verified';
+  if(file.verifications.identity&&file.verifications.address&&file.verifications.scenario&&(file.status==='submitted'||file.status==='priced')){
+   file.status='confirmed';
+   try{window.lumoUpdateLead&&lumoUpdateLead(file.id,{status:'confirmed'});}catch(_){}
+  }
   saveLoanFile(file);
   mod.classList.remove('running');mod.classList.add('done');
   showResult(sp,true);
   syncRail(true);
-  if(certainty(file)===100)showLetterSection();
+  if(certainty(file)===100)showReviewSection();
  },sp.log.length*stepMs+(reduceMotion?0:250));
 }
 
@@ -298,13 +264,13 @@ function showResult(sp,animate){
 function syncRail(){
  const c=certainty(file);
  $('mp').textContent=c;
- $('segC').className='seg'+(file.verifications.credit?' on':'');
- $('segA').className='seg'+(file.verifications.assets?' on':'');
- $('segI').className='seg'+(file.verifications.income?' on':'');
+ $('segI').className='seg'+(file.verifications.identity?' on':'');
+ $('segA').className='seg'+(file.verifications.address?' on':'');
+ $('segS').className='seg'+(file.verifications.scenario?' on':'');
  const ms=$('ms');
- if(c===100){ms.textContent='FULLY VERIFIED';ms.className='mstatus gr';}
+ if(c===100){ms.textContent='REVIEW-READY';ms.className='mstatus gr';}
  else if(c>35){ms.textContent='FIRMING — '+(100-c)+'% TO GO';ms.className='mstatus';}
- else{ms.textContent='PRICED — UNVERIFIED';ms.className='mstatus';}
+ else{ms.textContent='SUBMITTED — UNCONFIRMED';ms.className='mstatus';}
  // rate band
  const p=file.pricing.pick,b=firmedBand(file);
  const min=p.lo-0.25,max=p.hi+0.25,W=max-min;
@@ -316,88 +282,27 @@ function syncRail(){
  $('bsp').innerHTML=c===100?'<b>BAND LOCKED · '+spread+' BPS WIDE</b>':spread+' BPS OF UNCERTAINTY LEFT';
 }
 
-/* ---------------- letter ---------------- */
-let power=null;
-function showLetterSection(){
- const sec=$('lettersec');
+/* ---------------- in review ---------------- */
+function showReviewSection(){
+ const sec=$('reviewsec');
  if(sec.classList.contains('show'))return;
- const maxLoan=file.pricing.loan;
- power=power??maxLoan;
+ const nm=file.first||'';
+ const isPurch=file.flowKey==='home'||((file.flowKey==='dscr'||file.flowKey==='str')&&file.answers.pr==='purchase');
  sec.innerHTML=`
-  <div class="eyebrow">PRE-APPROVAL</div>
-  <h1 class="q">Verified. Now weaponize it.</h1>
-  <p class="sub" style="margin-bottom:26px">Your letter generates at any amount up to your max — sellers never need to know your ceiling. Dial it to the offer, print, done.</p>
-  <div class="powerbox">
-    <div class="bignum" id="pwv">${money(power)}</div>
-    <div class="ctx" id="pwc"></div>
-    <input type="range" id="pw" min="${Math.round(maxLoan*0.5)}" max="${maxLoan}" step="5000" value="${power}" aria-label="Letter amount">
-    <div class="range-l"><span>${moneyK(maxLoan*0.5)}</span><span>MAX ${moneyK(maxLoan)}</span></div>
-    <div class="powernote">Negotiation armor: a letter at exactly your offer price keeps your full buying power invisible. Regenerate anytime — each one is tracked by ID.</div>
-  </div>
-  <div id="paperwrap"></div>
-  <div class="letteractions">
-    <button class="cta" onclick="routeFile()" id="routeBtn">ROUTE MY VERIFIED FILE &rarr;</button>
-    <button class="cta cyan" onclick="window.print()">PRINT / PDF &darr;</button>
-  </div>
-  <div class="losec" id="losec"></div>`;
- sec.classList.add('show');
- const sl=$('pw');
- const paint=()=>{const p=(sl.value-sl.min)/(sl.max-sl.min)*100;sl.style.setProperty('--fill',p+'%');};
- paint();
- sl.oninput=()=>{power=+sl.value;$('pwv').textContent=money(power);paint();renderPaper();};
- if(file.status!=='preapproved'&&file.status!=='desk'){file.status='preapproved';saveLoanFile(file);try{window.lumoUpdateLead&&lumoUpdateLead(file.id,{status:'preapproved'});}catch(_){}}
- renderPaper();
- setTimeout(()=>sec.scrollIntoView({behavior:reduceMotion?'instant':'smooth',block:'start'}),150);
-}
-
-function renderPaper(){
- const b=firmedBand(file),d=new Date(),exp=new Date(Date.now()+60*86400000);
- const fmt=x=>x.toLocaleDateString('en-US',{month:'long',day:'numeric',year:'numeric'});
- const lid=file.id+'-L'+String(Math.round(power/1000)).padStart(4,'0');
- const fullName=(file.first+' '+(file.last||'')).trim();
- const html=`
- <div class="paper" id="letterPaper">
-  <div class="phead">
-    <div><div class="pmark">LUMO<em>LEND</em></div><div style="font-size:9px;letter-spacing:.2em;color:#5A6570;margin-top:4px;font-family:var(--disp)">LENDING DESK</div></div>
-    <div class="pmeta">LETTER ${lid}<br>ISSUED ${fmt(d).toUpperCase()}<br>VALID THROUGH ${fmt(exp).toUpperCase()}</div>
-  </div>
-  <h2>Conditional Pre-Approval</h2>
-  <p><b>${fullName}</b> has been reviewed by the LumoLend lending desk and is conditionally pre-approved for financing in the amount of:</p>
-  <div class="amt">${money(power)}</div>
-  <table>
-    <tr><td>Program</td><td>${file.pricing.pick.name}</td></tr>
-    <tr><td>Purpose</td><td>${FLOW_LABELS[file.flowKey]}</td></tr>
-    <tr><td>Verified rate band</td><td>${pct(b.lo)} – ${pct(b.hi)}</td></tr>
-    <tr><td>Credit</td><td>Soft tri-merge · mid ${file.verifications.credit?file.verifications.credit.score:'—'}</td></tr>
-    <tr><td>Assets</td><td>Funds to close verified electronically</td></tr>
-    <tr><td>Income</td><td>${file.verifications.income?file.verifications.income.method:'—'}</td></tr>
-  </table>
-  <p class="conds">Subject to: satisfactory property appraisal and title; no material change in verified credit, income, or assets; full underwriting review. This letter is not a rate lock or commitment to lend.</p>
-  <div class="sig">
-    <div><div class="sname">LumoLend Lending Desk</div><div class="stitle">Mortgage Loan Origination<br>NMLS #2732105 · desk@lumolend.com</div></div>
-    <div class="seal">VERIFIED<br>✓<br>LUMOLEND DESK</div>
-  </div>
- </div>`;
- $('paperwrap').innerHTML=html;
- $('printzone').innerHTML=html;
-}
-
-/* ---------------- route to the desk ---------------- */
-function routeFile(){
- file.status='desk';saveLoanFile(file);
- try{window.lumoUpdateLead&&lumoUpdateLead(file.id,{status:'routed'});}catch(_){}
- const btn=$('routeBtn');if(btn)btn.style.display='none';
- const sec=$('losec');
- sec.innerHTML=`
-  <div class="eyebrow">FILE ROUTED</div>
-  <div class="lolocked step">
-   <div class="lock-ico" style="border-color:var(--green);color:var(--green)">&#10003;</div>
-   <div>
-    <div class="q2">Your loan officer has the full verified file.</div>
-    <p>Everything you just built — pricing, verifications, the letter — is on their desk. Watch your inbox: your intro landed there when you locked the scenario, and the first call comes next.</p>
+  <div class="eyebrow">IN REVIEW</div>
+  <h1 class="q">${nm?nm+', your scenario is in review.':'Your scenario is in review.'}</h1>
+  <p class="sub" style="margin-bottom:26px">A licensed loan officer is analyzing your exact run — every answer, verbatim, nothing re-asked. Here’s what happens next:</p>
+  <div class="reviewbox">
+   <h3>The path from here</h3>
+   <div class="nextlist">
+    <div class="nextstep"><span class="nn">01</span><span class="nl">Your loan officer reviews the full file<small>Structure, pricing and any flags — usually same business day.</small></span></div>
+    <div class="nextstep"><span class="nn">02</span><span class="nl">First call — game plan in under 12 minutes<small>Watch your phone and inbox. The call starts at the finish line, not the forms.</small></span></div>
+    <div class="nextstep"><span class="nn">03</span><span class="nl">Soft credit pull — only with your written OK<small>Converts your stated band to locked pricing. Zero score impact.</small></span></div>
+    <div class="nextstep"><span class="nn">04</span><span class="nl">${isPurch?'Your real pre-approval letter':'Your firm term sheet'}<small>${isPurch?'Issued by your loan officer after review — built to win offers.':'Firm numbers against the live lender panel, structured to your plan.'}</small></span></div>
    </div>
   </div>`;
- setTimeout(()=>sec.scrollIntoView({behavior:reduceMotion?'instant':'smooth',block:'center'}),120);
+ sec.classList.add('show');
+ setTimeout(()=>sec.scrollIntoView({behavior:reduceMotion?'instant':'smooth',block:'start'}),150);
 }
 
 file?renderApp():renderEmpty();

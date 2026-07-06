@@ -159,7 +159,7 @@ function genRisks(f){
  if(a.credit==='600')out.push({s:'amber',l:'Sub-640 credit band',n:'Program set narrows; expect overlays. Rapid-rescore review on the first call.'});
  if(f.flowKey==='heloc'){
   const cp=a.balance>0?pmt(6.5,a.balance):0;
-  const dti=a.income?Math.round((a.debts+cp+pmt(9,Math.min(a.amount,a.value*0.85-a.balance),240))/a.income*100):null;
+  const dti=a.income?Math.round((a.debts+cp+pmt(8,Math.min(a.amount,a.value*0.85-a.balance),240))/a.income*100):null;
   if(dti!=null&&dti>50)out.push({s:'red',l:'DTI ~'+dti+'% — over cap',n:'Trim the draw, extend term, or pay down a tradeline before submission.'});
   else if(dti!=null&&dti>43)out.push({s:'amber',l:'DTI ~'+dti+'% — tight',n:'Fits expanded programs; keep a payoff-at-close option ready.'});
   if(a.value*(a.appraisal==='skip'?0.80:0.85)-a.balance<a.amount)out.push({s:'amber',l:'Requested line exceeds CLTV ceiling',n:'A full appraisal may unlock the gap; set expectations on call one.'});
@@ -182,7 +182,7 @@ function genRisks(f){
   if(a.income==='bank')out.push({s:'amber',l:'Bank-statement income',n:'Request 12 mo statements day one — deposit analysis is the long pole.'});
   if(a.stage==='contract')out.push({s:'red',l:'Under contract — clock running',n:'Confirm contingency dates immediately; order appraisal rush if <21 days.'});
  }
- if(!f.verifications.credit)out.push({s:'amber',l:'Credit unverified',n:'Soft pull pending — pricing still floats on stated band.'});
+ if(!f.verifications.identity||!f.verifications.address||!f.verifications.scenario)out.push({s:'amber',l:'Review confirmations incomplete',n:'Borrower hasn’t confirmed every file block — nudge via the review link.'});
  if(!out.length)out.push({s:'ok',l:'Clean file — no structural flags',n:'Nothing blocking. Speed is the differentiator here; run the standard path hard.'});
  return out;
 }
@@ -192,9 +192,9 @@ function genPlan(f){
  const add=(day,owner,label,note)=>t.push({day,owner,label,note});
  add(0,'ai','File assembled from borrower run','Pricing, answers and completed verifications attached. Nothing to re-ask.');
  add(0,'mlo','First call — script at right','Confirm the story, not the data. Target: intro + game plan in under 12 minutes.');
- if(!f.verifications.credit)add(0,'bor','Authorize soft credit pull','One tap from the borrower link; converts stated band to locked pricing.');
- if(!f.verifications.assets)add(1,'bor','Link accounts (read-only)','Funds-to-close confirmation; ~3 minutes on their phone.');
- if(!f.verifications.income)add(1,'bor',f.flowKey==='dscr'||f.flowKey==='str'?'Provide lease / rent history':'Complete income verification','Instant VOE where available; fallback docs auto-requested.');
+ add(0,'bor','Authorize soft credit pull','With written OK on the first call; converts stated band to locked pricing.');
+ add(1,'bor','Link accounts (read-only)','Funds-to-close confirmation; ~3 minutes on their phone.');
+ add(1,'bor',f.flowKey==='dscr'||f.flowKey==='str'?'Provide lease / rent history':'Complete income verification','Instant VOE where available; fallback docs auto-requested.');
  if(f.flowKey==='home'){
   add(1,'mlo','Lock strategy call','Float vs. lock given contingency dates'+(a.stage==='contract'?' — contract clock is live.':'.'));
   if(a.vet==='yes')add(1,'mlo','Pull COE (VA)','Certificate of Eligibility via portal — same day.');
@@ -279,7 +279,7 @@ function renderQueue(){
  files.forEach(f=>{
   const b=document.createElement('button');b.className='qitem'+(f.id===sel?' sel':'');
   const isNew=(Date.now()-new Date(f.created))<3600000&&!f.id.startsWith('LL-DEMO');
-  const pillCls={priced:'',verified:'cyan',preapproved:'green',desk:'green'}[f.status]||'';
+  const pillCls={priced:'',submitted:'cyan',confirmed:'green',desk:'green'}[f.status]||'';
   b.innerHTML=`<div class="qtop"><span class="qname">${f.first} ${f.last||''}</span>${isNew?'<span class="qnew">NEW</span>':`<span class="pill ${pillCls}">${statusLabel(f)}</span>`}</div>
    <div class="qsub"><b>${moneyK(f.pricing.loan)}</b> · ${FLOW_LABELS[f.flowKey]} · ${ago(f.created)}</div>`;
   b.onclick=()=>{sel=f.id;renderQueue();renderDetail();};
@@ -291,7 +291,7 @@ function renderDetail(){
  const f=files.find(x=>x.id===sel);if(!f)return;
  const b=firmedBand(f),c=certainty(f),eta=closeETA(f);
  const risks=genRisks(f),plan=genPlan(f),lenders=genLenders(f),script=genScript(f);
- const vTag=k=>f.verifications[k]?'<span class="vtag on">&#10003; VERIFIED</span>':'<span class="vtag off">UNVERIFIED</span>';
+ const vTag=k=>f.verifications[k]?'<span class="vtag on">&#10003; CONFIRMED</span>':'<span class="vtag off">UNCONFIRMED</span>';
  $('detail').innerHTML=`<div class="step">
   <div class="banner">
    <div>
@@ -304,9 +304,9 @@ function renderDetail(){
   <div class="bstats">
    <div class="bstat"><div class="l">LOAN</div><div class="n">${moneyK(f.pricing.loan)}</div></div>
    <div class="bstat"><div class="l">RATE BAND</div><div class="n cy">${pct(b.lo)}–${pct(b.hi)}</div></div>
-   <div class="bstat"><div class="l">CERTAINTY</div><div class="n ${c===100?'gr':''}">${c}<small>%</small></div></div>
+   <div class="bstat"><div class="l">READINESS</div><div class="n ${c===100?'gr':''}">${c}<small>%</small></div></div>
    <div class="bstat"><div class="l">PROJECTED CTC</div><div class="n gr">${eta}<small> DAYS</small></div></div>
-   <div class="bstat"><div class="l">CREDIT</div><div class="n">${f.verifications.credit?f.verifications.credit.score:'—'}</div></div>
+   <div class="bstat"><div class="l">CREDIT (STATED)</div><div class="n">${CREDIT_LABELS[f.answers.credit]||'—'}</div></div>
   </div>
   <div class="grid2">
    <div>
@@ -318,9 +318,9 @@ function renderDetail(){
      <h3>RUN REPLAY — EVERY ANSWER, VERBATIM</h3>
      <div class="replay">
       ${Object.entries(f.answers).filter(([k])=>k!=='name'&&k!=='intent').map(([k,v])=>`<div><span>${KEY_LABELS[k]||k}</span><span>${fmtAns(k,v)}</span></div>`).join('')}
-      <div><span>Credit ${vTag('credit')}</span><span>${f.verifications.credit?'Mid '+f.verifications.credit.score:CREDIT_LABELS[f.answers.credit]||'—'}</span></div>
-      <div><span>Assets ${vTag('assets')}</span><span>${f.verifications.assets?moneyK(f.verifications.assets.verified)+' across '+f.verifications.assets.accounts+' accts':'—'}</span></div>
-      <div><span>Income ${vTag('income')}</span><span>${f.verifications.income?f.verifications.income.method:'—'}</span></div>
+      <div><span>Identity ${vTag('identity')}</span><span>${(f.email||'—')+(f.phone?' · '+f.phone:'')}</span></div>
+      <div><span>Address ${vTag('address')}</span><span>${f.address&&f.address.street?f.address.street+(f.address.unit?' #'+f.address.unit:'')+', '+(f.address.city||'')+' '+(f.address.state||'')+' '+(f.address.zip||''):'—'}</span></div>
+      <div><span>Scenario ${vTag('scenario')}</span><span>${f.verifications.scenario?'Confirmed by borrower':'Awaiting confirmation'}</span></div>
      </div>
     </div>
    </div>

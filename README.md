@@ -14,12 +14,8 @@ A conversational pricing journey (purchase, refi, DSCR, STR, fix & flip, HELOC).
 - Exit-intent save-run capture
 - On lock: builds a structured LoanFile and hands off to pre-approval
 
-### 2. `preapprove.html` — The Pre-Approver
-Three one-tap verifications (soft credit, assets, income/cash-flow), each with a live terminal-style scan. The centerpiece: a **certainty meter** and a **rate band that visibly narrows** as uncertainty is removed. At 100%:
-
-- A pre-approval letter generates on the spot — printable, paper-styled, tracked by ID
-- **Shopping-power slider**: generate the letter at exactly the offer amount so sellers never see the borrower's ceiling
-- One click routes the verified file to the desk
+### 2. `preapprove.html` — The Scenario Review
+Three one-tap confirmations (identity & contact, property address, scenario snapshot), each with a live terminal-style scan of the borrower's own inputs. The centerpiece: a **review-readiness meter** and a **rate band that visibly narrows** as the file firms up. At 100% the scenario is queued for loan-officer review. No letters are auto-generated — pre-approvals are issued by the loan officer after review.
 
 ### 3. `desk.html` — The MLO Command Deck
 The internal view. The borrower's file arrives fully assembled — nothing gets re-asked. For every file the deck generates:
@@ -58,7 +54,7 @@ Run a full journey → lock the scenario → complete verifications → generate
 
 ## Status / disclaimers
 
-Prototype. All verifications are simulated; rates are illustrative indicative ranges, not offers or commitments to lend. NMLS #2732105 shown for prototype realism only.
+Prototype. Nothing is auto-verified or auto-approved — every scenario is reviewed by a loan officer, and pre-approval letters are issued only after review. Rates are illustrative indicative ranges, not offers or commitments to lend. NMLS #2732105 · Equal Housing Lender.
 
 ## Roadmap
 

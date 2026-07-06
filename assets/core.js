@@ -14,7 +14,6 @@ const FLOW_LABELS = {
   str: 'Short-term rental', bridge: 'Fix & flip bridge', heloc: 'Home equity'
 };
 const CREDIT_LABELS = { '760': '760+', '720': '720–759', '680': '680–719', '640': '640–679', '600': 'Below 640' };
-const CREDIT_MID = { '760': 782, '720': 738, '680': 701, '640': 662, '600': 618 };
 
 /* ---------- LoanFile persistence ---------- */
 function decodeHashFile() {
@@ -45,14 +44,14 @@ function loadPipeline() {
   try { return JSON.parse(localStorage.getItem('lumolend_pipeline') || '[]'); } catch (_) { return []; }
 }
 
-/* ---------- verification-adjusted pricing ----------
-   Each completed verification removes uncertainty:
-   the indicative band narrows toward its floor.      */
+/* ---------- confirmation-adjusted pricing ----------
+   Each block the borrower confirms removes uncertainty:
+   the indicative band narrows toward its floor.       */
 function certainty(f) {
   let c = 35;
-  if (f.verifications.credit) c += 25;
-  if (f.verifications.assets) c += 20;
-  if (f.verifications.income) c += 20;
+  if (f.verifications.identity) c += 25;
+  if (f.verifications.address) c += 20;
+  if (f.verifications.scenario) c += 20;
   return c;
 }
 function firmedBand(f) {
@@ -63,7 +62,7 @@ function firmedBand(f) {
   return { lo, hi: lo + span * keep };
 }
 function statusLabel(f) {
-  return { priced: 'PRICED', verified: 'VERIFIED', preapproved: 'PRE-APPROVED', desk: 'AT THE DESK' }[f.status] || 'PRICED';
+  return { priced: 'PRICED', submitted: 'SUBMITTED', confirmed: 'IN REVIEW', desk: 'AT THE DESK' }[f.status] || 'PRICED';
 }
 
 /* ---------- demo files (seed the desk pipeline) ---------- */
@@ -73,58 +72,61 @@ function demoFiles() {
     {
       id: 'LL-DEMO01', created: new Date(now - 26 * 60000).toISOString(),
       first: 'Priya', last: 'Raman', email: 'priya@example.com', phone: '(415) 555-0182',
-      flowKey: 'home', answers: { intent: 'home', stage: 'offers', price: 985000, downPct: 20, income: 'bank', vet: 'no', credit: '740', name: 'Priya' },
+      address: { street: '2847 Marlowe Ave', unit: '4B', city: 'San Rafael', state: 'CA', zip: '94901' },
+      flowKey: 'home', answers: { intent: 'home', stage: 'offers', price: 985000, downPct: 20, incomeAmt: 18500, debts: 1450, income: 'bank', vet: 'no', credit: '740', name: 'Priya' },
       pricing: {
-        loan: 788000, rate: 7.06, payment: 5271,
-        pick: { name: 'Bank statement 30-yr', lo: 7.0, hi: 7.625 },
+        loan: 788000, rate: 6.06, payment: 4756,
+        pick: { name: 'Bank statement 30-yr', lo: 6.0, hi: 6.625 },
         cards: [
-          { name: 'Bank statement 30-yr', desc: 'Deposits qualify you — not tax returns', lo: 7.0, hi: 7.625, rec: true },
-          { name: 'Bank statement 40-yr IO', desc: 'Lower payment, 10-yr interest-only', lo: 7.25, hi: 7.875, rec: false },
-          { name: 'Conventional (if returns work)', desc: 'Worth testing your filed income', lo: 6.25, hi: 6.625, rec: false }],
+          { name: 'Bank statement 30-yr', desc: 'Deposits qualify you — not tax returns', lo: 6.0, hi: 6.625, rec: true },
+          { name: 'Bank statement 40-yr IO', desc: 'Lower payment, 10-yr interest-only', lo: 6.25, hi: 6.875, rec: false },
+          { name: 'Conventional (if returns work)', desc: 'Worth testing your filed income', lo: 5.25, hi: 5.625, rec: false }],
         verdict: 'Routes to bank-statement lending — deposits qualify, not the Schedule C.'
       },
       verifications: {
-        credit: { score: 738, at: new Date(now - 20 * 60000).toISOString() },
-        assets: { verified: 262000, accounts: 2, at: new Date(now - 18 * 60000).toISOString() },
-        income: null
+        identity: { at: new Date(now - 20 * 60000).toISOString() },
+        address: { at: new Date(now - 18 * 60000).toISOString() },
+        scenario: null
       },
-      status: 'verified'
+      status: 'submitted'
     },
     {
       id: 'LL-DEMO02', created: new Date(now - 3 * 3600000).toISOString(),
       first: 'Marcus', last: 'Webb', email: 'marcus@example.com', phone: '(602) 555-0147',
+      address: { street: '1119 E Palo Verde Dr', unit: '', city: 'Phoenix', state: 'AZ', zip: '85014' },
       flowKey: 'bridge', answers: { intent: 'bridge', buy: 410000, rehab: 95000, arv: 685000, exp: '5', credit: '720', name: 'Marcus' },
       pricing: {
-        loan: 429250, rate: 10.31, payment: 3689,
-        pick: { name: '12-mo interest-only', lo: 9.81, hi: 10.56 },
+        loan: 429250, rate: 9.31, payment: 3330,
+        pick: { name: '12-mo interest-only', lo: 8.81, hi: 9.56 },
         cards: [
-          { name: '12-mo interest-only', desc: 'The standard flip structure', lo: 9.81, hi: 10.56, rec: true },
-          { name: '18-mo interest-only', desc: 'Room for a slower exit', lo: 10.06, hi: 10.81, rec: false },
-          { name: 'Bridge-to-DSCR', desc: 'Auto-refi into a rental loan at exit', lo: 9.94, hi: 10.69, rec: false }],
+          { name: '12-mo interest-only', desc: 'The standard flip structure', lo: 8.81, hi: 9.56, rec: true },
+          { name: '18-mo interest-only', desc: 'Room for a slower exit', lo: 9.06, hi: 9.81, rec: false },
+          { name: 'Bridge-to-DSCR', desc: 'Auto-refi into a rental loan at exit', lo: 8.94, hi: 9.69, rec: false }],
         verdict: 'All-in basis $505K vs $685K ARV = $180K gross (36%). Healthy spread.'
       },
       verifications: {
-        credit: { score: 741, at: new Date(now - 2.6 * 3600000).toISOString() },
-        assets: { verified: 214000, accounts: 3, at: new Date(now - 2.5 * 3600000).toISOString() },
-        income: { method: 'Experience-based (operator)', at: new Date(now - 2.4 * 3600000).toISOString() }
+        identity: { at: new Date(now - 2.6 * 3600000).toISOString() },
+        address: { at: new Date(now - 2.5 * 3600000).toISOString() },
+        scenario: { at: new Date(now - 2.4 * 3600000).toISOString() }
       },
-      status: 'preapproved'
+      status: 'confirmed'
     },
     {
       id: 'LL-DEMO03', created: new Date(now - 26 * 3600000).toISOString(),
       first: 'Dana', last: 'Okafor', email: 'dana@example.com', phone: '(303) 555-0121',
+      address: { street: '740 Galapago St', unit: '12', city: 'Denver', state: 'CO', zip: '80204' },
       flowKey: 'dscr', answers: { intent: 'dscr', pr: 'purchase', value: 465000, rent: 3350, ltv: 70, credit: '760', name: 'Dana' },
       pricing: {
-        loan: 325500, rate: 7.0, payment: 2166,
-        pick: { name: '5-yr prepay', lo: 7.0, hi: 7.5 },
+        loan: 325500, rate: 6.0, payment: 1952,
+        pick: { name: '5-yr prepay', lo: 6.0, hi: 6.5 },
         cards: [
-          { name: '5-yr prepay', desc: 'Best rate — built to hold', lo: 7.0, hi: 7.5, rec: true },
-          { name: '3-yr prepay', desc: 'Balanced flexibility', lo: 7.25, hi: 7.75, rec: false },
-          { name: 'No prepay', desc: 'Full freedom to exit', lo: 7.5, hi: 8.0, rec: false }],
+          { name: '5-yr prepay', desc: 'Best rate — built to hold', lo: 6.0, hi: 6.5, rec: true },
+          { name: '3-yr prepay', desc: 'Balanced flexibility', lo: 6.25, hi: 6.75, rec: false },
+          { name: 'No prepay', desc: 'Full freedom to exit', lo: 6.5, hi: 7.0, rec: false }],
         verdict: 'Coverage runs about 1.31× — strong file.'
       },
-      verifications: { credit: { score: 785, at: new Date(now - 25 * 3600000).toISOString() }, assets: null, income: null },
-      status: 'priced'
+      verifications: { identity: { at: new Date(now - 25 * 3600000).toISOString() }, address: null, scenario: null },
+      status: 'submitted'
     }
   ];
 }
