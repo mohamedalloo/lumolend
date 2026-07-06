@@ -166,9 +166,9 @@ input[type=range]:focus-visible::-webkit-slider-thumb{outline:2px solid var(--cy
 @keyframes pop{from{transform:scale(.35);opacity:0}}
 .inter .t1{font-family:var(--disp);font-size:11px;letter-spacing:.32em;color:var(--green);text-align:center}
 .inter .t2{font-family:var(--disp);font-size:19px;margin-top:8px;text-align:center}
-.mback{position:fixed;inset:0;z-index:70;background:rgba(5,8,12,.85);backdrop-filter:blur(7px);display:none;align-items:center;justify-content:center;padding:20px}
+.mback{position:fixed;inset:0;z-index:70;background:rgba(5,8,12,.85);backdrop-filter:blur(7px);display:none;padding:20px;overflow-y:auto;overscroll-behavior:contain;-webkit-overflow-scrolling:touch}
 .mback.show{display:flex}
-.modal{background:linear-gradient(180deg,var(--panel2),var(--panel));border:1px solid var(--cyan-dim);border-radius:12px;padding:34px 32px 30px;max-width:460px;width:100%;position:relative;box-shadow:0 30px 90px rgba(0,0,0,.6),0 0 60px var(--cyan-ghost);animation:warpIn .35s}
+.modal{background:linear-gradient(180deg,var(--panel2),var(--panel));border:1px solid var(--cyan-dim);border-radius:12px;padding:34px 32px 30px;max-width:460px;width:100%;position:relative;box-shadow:0 30px 90px rgba(0,0,0,.6),0 0 60px var(--cyan-ghost);animation:warpIn .35s;margin:auto}
 .modal .mx{position:absolute;top:10px;right:14px;background:none;border:none;color:var(--faint);font-size:20px;cursor:pointer;padding:4px}
 .modal .mx:hover{color:var(--txt)}
 .modal h3{font-family:var(--disp);font-weight:500;font-size:22px;margin-bottom:6px}
@@ -739,6 +739,7 @@ function checkPhone(v){
  return{ok:true,d};
 }
 let enticed=false;
+function syncBodyLock(){const open=['mback','lockback','entback'].some(id=>{const el=$(id);return el&&el.classList.contains('show');});document.body.style.overflow=open?'hidden':'';}
 function isPurchase(){return state.flowKey==='home'||((state.flowKey==='dscr'||state.flowKey==='str')&&state.answers.pr==='purchase');}
 function openLock(){
  const e=liveEstimate(),s=$('lockStats');
@@ -749,11 +750,11 @@ function openLock(){
    <div class="mstat"><div class="l">EST / MO</div><div class="n">${money(e.p)}</div></div>`;
  }else s.style.display='none';
  if(state.answers.name&&!$('lFirst').value)$('lFirst').value=state.answers.name;
- $('lockback').classList.add('show');
+ $('lockback').classList.add('show');syncBodyLock();
  setTimeout(()=>$('lFirst').focus(),60);
 }
 function closeLock(byUser){
- $('lockback').classList.remove('show');
+ $('lockback').classList.remove('show');syncBodyLock();
  if(byUser&&!runSaved&&!enticed){enticed=true;openEntice();}
 }
 function openEntice(){
@@ -811,9 +812,9 @@ function openEntice(){
    <div class="mnote">60 seconds · no documents. A human firms these numbers against the live panel.</div>`;
  }
  $('entBody').innerHTML=`<button class="mx" onclick="closeEntice()" aria-label="Close">&times;</button>`+inner;
- $('entback').classList.add('show');
+ $('entback').classList.add('show');syncBodyLock();
 }
-function closeEntice(){$('entback').classList.remove('show');}
+function closeEntice(){$('entback').classList.remove('show');syncBodyLock();}
 function enticeUnlock(){closeEntice();openLock();}
 function fieldErr(el,hintId,msg){el.classList.add('bad');el.classList.remove('ok');if(hintId){const h=$(hintId);h.textContent=msg||'';h.className='fhint';}el.focus();}
 function submitScenario(){
@@ -858,7 +859,7 @@ function submitScenario(){
  }catch(_){}
  try{window.lumoSaveLead&&lumoSaveLead(file);}catch(_){}
  runSaved=true;
- $('lockback').classList.remove('show');
+ $('lockback').classList.remove('show');syncBodyLock();
  const sv=$('saved');if(sv)sv.style.display='block';
  setTimeout(()=>{
   location.href='preapprove.html#f='+encodeURIComponent(btoa(unescape(encodeURIComponent(JSON.stringify(file)))));
@@ -954,7 +955,7 @@ function maybeExit(){
  exitShown=true;openSave();
 }
 function openSave(){
- if(runSaved){$('mback').classList.add('show');return;}
+ if(runSaved){$('mback').classList.add('show');syncBodyLock();return;}
  const e=liveEstimate(),s=$('mStats');
  if(e&&isFinite(e.loan)&&e.loan>0){
   s.style.display='flex';
@@ -964,10 +965,10 @@ function openSave(){
  }else s.style.display='none';
  const nm=state.answers.name;
  $('mCopy').textContent=(nm?nm+' \u2014 your':'Your')+' pricing is live. Drop an email and we\u2019ll hold everything exactly where you left it.';
- $('mback').classList.add('show');
+ $('mback').classList.add('show');syncBodyLock();
  setTimeout(()=>{const em=$('mEmail');if(em)em.focus();},60);
 }
-function closeSave(){$('mback').classList.remove('show');}
+function closeSave(){$('mback').classList.remove('show');syncBodyLock();}
 function saveEmail(){
  const em=$('mEmail'),v=em.value.trim();
  if(!/.+@.+\..+/.test(v)){em.focus();em.style.borderColor='#FF6B6B';return;}
