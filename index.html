@@ -759,32 +759,51 @@ function closeLock(byUser){
 function openEntice(){
  const e=liveEstimate(),r=computeResults(),pick=r.cards.find(c=>c.rec)||r.cards[0];
  const exp=new Date(Date.now()+60*86400000).toLocaleDateString('en-US',{month:'long',day:'numeric',year:'numeric'});
+ /* pull whatever they already typed into the form — personalization is the hook */
+ const fv=id=>($(id)?$(id).value.trim():'');
+ const nm=(fv('lFirst')+' '+fv('lLast')).trim()||state.answers.name||'';
+ const em=fv('lEmail'),ph=fv('lPhone');
+ const street=fv('lStreet'),city=fv('lCity'),st=fv('lState').toUpperCase(),zip=fv('lZip'),unit=fv('lUnit');
+ const prop=street?(street+(unit?' #'+unit:'')+(city?', '+city:'')+(st?', '+st:'')+(zip?' '+zip:'')):(st||'');
+ const who=[];
+ who.push(['Prepared for',nm||'You']);
+ if(em)who.push(['Email',em]);
+ if(ph)who.push(['Phone',ph]);
+ if(prop)who.push(['Property',prop]);
+ const whoRows=who.map(w=>`<div><span>${w[0]}</span><span>${w[1]}</span></div>`).join('');
+ const rateTxt=pick?pct(pick.lo)+' – '+pct(pick.hi):'—';
+ const aprTxt=pick?pct(pick.lo+0.24)+' – '+pct(pick.hi+0.24):'—';
+ const ccTxt=e?money(Math.round(e.loan*0.02/500)*500):'—';
+ const lockedRows=`
+     <div><span>Interest rate</span><span class="blurred">${rateTxt}</span></div>
+     <div><span>APR</span><span class="blurred">${aprTxt}</span></div>
+     <div><span>Est. closing costs</span><span class="blurred">${ccTxt}</span></div>`;
  let inner;
  if(isPurchase()){
   inner=`<h3>Your letter is <b>one step away.</b></h3>
-   <p>Letters aren’t auto-generated here — a licensed loan officer reviews your scenario first, then issues the real thing. Here’s what yours looks like:</p>
+   <p>Letters aren’t auto-generated here — a licensed loan officer reviews your scenario first, then issues the real thing. Yours is already taking shape:</p>
    <div class="spaper">
     <h4>CONDITIONAL PRE-APPROVAL</h4>
     <div class="samt">${e?money(e.loan):'—'}</div>
     <div class="srows">
-     <div><span>Program</span><span class="blurred">${pick?pick.name:''}</span></div>
-     <div><span>Rate band</span><span class="blurred">${pick?pct(pick.lo)+' – '+pct(pick.hi):''}</span></div>
-     <div><span>Prepared for</span><span class="blurred">${state.answers.name||'You'}</span></div>
+     ${whoRows}
+     <div><span>Program</span><span>${pick?pick.name:'—'}</span></div>${lockedRows}
      <div><span>Valid through</span><span>${exp}</span></div>
     </div>
     <div class="smeta">Issued only after review by a licensed loan officer. NMLS #2732105 · Equal Housing Lender.</div>
    </div>
    <button class="cta" style="width:100%;justify-content:center" onclick="enticeUnlock()">SUBMIT MY SCENARIO FOR REVIEW →</button>
-   <div class="mnote">60 seconds · no documents · no hard pull. Your reviewed scenario comes back with the real numbers.</div>`;
+   <div class="mnote">60 seconds · no documents · no hard pull. Your reviewed letter unlocks the real numbers.</div>`;
  }else{
   inner=`<h3>Don’t leave your <b>terms on the table.</b></h3>
-   <p>These are the structures your run priced. A reviewed scenario firms them into a real term sheet:</p>
+   <p>Your term sheet is already taking shape — a reviewed scenario firms these numbers against the live lender panel:</p>
    <div class="spaper">
     <h4>INDICATIVE TERM SHEET</h4>
+    <div class="samt">${e?money(e.loan):'—'}</div>
     <div class="srows">
-     ${r.cards.map(c=>`<div><span>${c.name}</span><span><b>${pct(c.lo)} – ${pct(c.hi)}</b></span></div>`).join('')}
-     <div><span>Est. payment</span><span class="blurred">${e?money(e.p)+' / mo':''}</span></div>
-     <div><span>Prepared for</span><span class="blurred">${state.answers.name||'You'}</span></div>
+     ${whoRows}
+     <div><span>Program</span><span>${pick?pick.name:'—'}</span></div>${lockedRows}
+     <div><span>Est. payment</span><span class="blurred">${e?money(e.p)+' / mo':'—'}</span></div>
     </div>
     <div class="smeta">Indicative ranges, not an offer to lend. Firm terms issued after loan-officer review. NMLS #2732105 · Equal Housing Lender.</div>
    </div>
