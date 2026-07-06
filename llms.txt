@@ -1,0 +1,30 @@
+# LumoLend
+
+> LumoLend (https://lumolend.com) is a U.S. mortgage marketplace operated by Honest Casa LLC (NMLS #1566096, CA DRE #02022356). Borrowers price a mortgage scenario in minutes with live indicative rates, then a licensed loan officer reviews the exact scenario and takes it to closing. AI finds it. A human funds it.
+
+## What LumoLend does
+
+- Conversational mortgage pricing across six scenario types: home purchase, refinance (rate/term and cash-out), DSCR rental property loans, short-term rental (Airbnb/VRBO) loans, fix & flip bridge loans, and HELOC / home equity loans.
+- Live indicative rate ranges, monthly payment, and loan amount update as the borrower answers — no documents and no login required to price a scenario.
+- Flow-specific underwriting logic: DSCR coverage math, bridge loan-to-cost caps, HELOC debt-to-income and CLTV ceilings, VA routing, and bank-statement income detection for self-employed borrowers.
+- Every submitted scenario is reviewed by a licensed loan officer. Nothing is auto-approved, and pre-approval letters are issued only after human review.
+- Each scenario shops a live lender panel (100+ programs compared per run).
+
+## How it works
+
+1. The borrower answers a short conversational flow; pricing updates live.
+2. At "Your Terms" they see three loan structures with indicative rate ranges and lock the one they want.
+3. They submit contact details and property address; the scenario routes to a licensed mortgage loan originator, who is introduced by email.
+4. The loan officer reviews the file, firms pricing against the lender panel, and guides the borrower to closing.
+
+## Company
+
+- Brand: LumoLend, operated by Honest Casa LLC (dba LumoLend)
+- Company NMLS ID: 1566096 · California DRE License: 02022356
+- Loan officer: Moh Alloo, Mortgage Loan Originator, NMLS #2732105 (West Capital Lending)
+- Contact: desk@lumolend.com
+- Related brand: HonestCasa (https://honestcasa.com), a home-equity marketplace by the same company
+
+## Disclaimers
+
+Rates shown are illustrative indicative ranges, not offers or commitments to lend; actual terms are determined by the lending partner after underwriting. LumoLend does not directly originate, fund, or service mortgage loans. Equal Housing Lender.
