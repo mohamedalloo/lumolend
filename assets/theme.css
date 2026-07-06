@@ -76,3 +76,14 @@ header.bar{position:relative;z-index:5;display:flex;justify-content:space-betwee
 @media(prefers-reduced-motion:reduce){.step{animation:none}}
 
 footer.legal{position:relative;z-index:2;padding:20px clamp(18px,4vw,48px) 30px;font-size:10.5px;color:var(--faint);line-height:1.7;max-width:1200px;margin:0 auto}
+
+/* ---- lender trust strip ---- */
+.truststrip{position:relative;z-index:2;max-width:880px;margin:0 auto;padding:36px clamp(18px,4vw,48px) 6px;text-align:center}
+.truststrip .tlabel{font-family:var(--disp);font-size:9.5px;letter-spacing:.3em;color:var(--mut);margin-bottom:20px;display:flex;align-items:center;gap:14px;justify-content:center}
+.truststrip .tlabel::before,.truststrip .tlabel::after{content:'';width:44px;height:1px;background:linear-gradient(90deg,transparent,var(--cyan-dim));flex-shrink:0}
+.truststrip .tlabel::after{background:linear-gradient(90deg,var(--cyan-dim),transparent)}
+.tlogos{display:flex;flex-wrap:wrap;justify-content:center;gap:16px 36px;align-items:center}
+.tlogos span{font-family:var(--disp);font-weight:500;font-size:13px;letter-spacing:.22em;color:var(--faint);transition:.25s;cursor:default;white-space:nowrap}
+.tlogos span:hover{color:var(--txt);text-shadow:0 0 18px var(--cyan-ghost)}
+.tmeta{margin-top:18px;font-size:10.5px;color:var(--faint);letter-spacing:.04em;line-height:1.7;max-width:64ch;margin-left:auto;margin-right:auto}
+.tmeta b{color:var(--green);font-weight:500}
