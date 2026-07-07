@@ -325,6 +325,7 @@ footer a{color:var(--mut)}
    By checking this box, I expressly consent to receive calls, texts and emails about my inquiry from LumoLend and its loan officers at the contact info provided &mdash; including via automated technology and prerecorded messages, and even if my number appears on a federal, state or company Do-Not-Call list. Consent isn&rsquo;t required to obtain a loan. Msg &amp; data rates may apply.</label>
   <button class="cta" style="margin-top:0;width:100%;justify-content:center" onclick="submitScenario()">SUBMIT FOR REVIEW &rarr;</button>
   <div class="mnote">No documents &middot; a licensed loan officer reviews your exact scenario.</div>
+  <div id="lockProof"></div>
  </div>
 </div>
 
@@ -336,6 +337,11 @@ footer a{color:var(--mut)}
   <div class="tlabel">EVERY SCENARIO SHOPS A LIVE LENDER PANEL</div>
   <div class="tlogos"><span>ROCKET MORTGAGE</span><span>FIGURE</span><span>PENNYMAC</span><span>HOMEBRIDGE</span><span>NFTYDOOR</span></div>
   <div class="tmeta"><b>100+ programs</b> compared per run &middot; 256-bit encryption &middot; Representative panel; lender availability varies by scenario and state.</div>
+</section>
+
+<section class="lp-wrap" aria-label="Client results">
+  <div id="lumoProofHome"></div>
+  <div class="lp-note">Results shared with permission. Individual outcomes vary; timelines and terms depend on the lender, the file, and market conditions.</div>
 </section>
 
 <footer>
@@ -367,6 +373,7 @@ footer a{color:var(--mut)}
 
 <script src="assets/config.js"></script>
 <script src="assets/backend.js"></script>
+<script src="assets/social.js"></script>
 <script>
 /* ============ helpers ============ */
 const $=id=>document.getElementById(id);
@@ -748,6 +755,10 @@ function renderResults(){
  el.appendChild(cards);
  const v=document.createElement('div');v.className='verdict';v.innerHTML=r.verdict;el.appendChild(v);
 
+ const pf=document.createElement('div');pf.style.cssText='max-width:660px;margin-top:26px';
+ pf.innerHTML='<div class="eyebrow" style="margin-bottom:12px">FROM FILES LIKE YOURS</div>'+lumoProofCard(state.flowKey);
+ el.appendChild(pf);
+
  const gate=document.createElement('div');gate.className='gate';
  gate.innerHTML=`<h3>Lock this scenario for review.</h3>
   <p>Confirm your details — about 60 seconds, no documents — and this exact run goes to a licensed loan officer for review. Pricing gets firmed against the live lender panel, and nothing gets re-asked.</p>
@@ -792,6 +803,7 @@ function openLock(){
    <div class="mstat"><div class="l">EST / MO</div><div class="n">${money(e.p)}</div></div>`;
  }else s.style.display='none';
  if(state.answers.name&&!$('lFirst').value)$('lFirst').value=state.answers.name;
+ $('lockProof').innerHTML=lumoProofMini(state.flowKey);
  $('lockback').classList.add('show');syncBodyLock();
  setTimeout(()=>$('lFirst').focus(),60);
 }
@@ -836,7 +848,8 @@ function openEntice(){
     <div class="smeta">Issued only after review by a licensed loan officer. NMLS #2732105 · Equal Housing Lender.</div>
    </div>
    <button class="cta" style="width:100%;justify-content:center" onclick="enticeUnlock()">SUBMIT MY SCENARIO FOR REVIEW →</button>
-   <div class="mnote">60 seconds · no documents. Your reviewed letter unlocks the real numbers.</div>`;
+   <div class="mnote">60 seconds · no documents. Your reviewed letter unlocks the real numbers.</div>
+   ${lumoProofMini(state.flowKey)}`;
  }else{
   inner=`<h3>Don’t leave your <b>terms on the table.</b></h3>
    <p>Your term sheet is already taking shape — a reviewed scenario firms these numbers against the live lender panel:</p>
@@ -851,7 +864,8 @@ function openEntice(){
     <div class="smeta">Indicative ranges, not an offer to lend. Firm terms issued after loan-officer review. NMLS #2732105 · Equal Housing Lender.</div>
    </div>
    <button class="cta" style="width:100%;justify-content:center" onclick="enticeUnlock()">SUBMIT MY SCENARIO FOR REVIEW →</button>
-   <div class="mnote">60 seconds · no documents. A human firms these numbers against the live panel.</div>`;
+   <div class="mnote">60 seconds · no documents. A human firms these numbers against the live panel.</div>
+   ${lumoProofMini(state.flowKey)}`;
  }
  $('entBody').innerHTML=`<button class="mx" onclick="closeEntice()" aria-label="Close">&times;</button>`+inner;
  $('entback').classList.add('show');syncBodyLock();
@@ -1024,6 +1038,7 @@ function saveEmail(){
 }
 
 render();
+lumoProofStrip('lumoProofHome',3);
 </script>
 </body>
 </html>

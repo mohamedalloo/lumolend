@@ -133,6 +133,7 @@
 <script src="assets/config.js"></script>
 <script src="assets/backend.js"></script>
 <script src="assets/core.js"></script>
+<script src="assets/social.js"></script>
 <script>
 'use strict';
 let file=loadLoanFile();
@@ -216,6 +217,7 @@ function renderApp(){
           <div class="ht">Your intro is in your inbox<br><b>&#9679; confirmations firm pricing before the first call</b></div>
         </div>
       </div>
+      <div id="railProof" style="margin-top:14px"></div>
     </div>
   </div>
   <div class="reviewsec" id="reviewsec"></div>
@@ -230,6 +232,7 @@ function renderApp(){
   mods.appendChild(d);
   if(file.verifications[sp.key])showResult(sp,false);
  });
+ const rp=$('railProof');if(rp&&window.lumoProofCard)rp.innerHTML=lumoProofCard(file.flowKey);
  syncRail(false);
  if(certainty(file)===100)showReviewSection();
 }
