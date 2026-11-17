@@ -46,6 +46,7 @@
 
   /* Save an in-progress run (exit-intent / save-run modal). */
   window.lumoSaveRun = function (state, email, estimate) {
+    if (window.mpTrack) window.mpTrack('scenario_run', {});
     return insert('runs', {
       email,
       name: (state.answers && state.answers.name) || null,
@@ -60,6 +61,7 @@
   /* Save a locked scenario (the gate) as a lead. */
   window.lumoSaveLead = function (file) {
     const pick = (file.pricing && file.pricing.pick) || {};
+    if (window.mpTrack) window.mpTrack('lead_submitted', { flow: file.flowKey, program: pick.name || null, loan: Math.round((file.pricing && file.pricing.loan) || 0) });
     return insert('leads', {
       file_id: file.id,
       first_name: file.first,
